@@ -5,6 +5,7 @@ import com.pharmacy.pos.iam.dto.LoginRequest;
 import com.pharmacy.pos.iam.dto.LoginResponse;
 import com.pharmacy.pos.iam.dto.PinLoginRequest;
 import com.pharmacy.pos.iam.dto.RefreshTokenRequest;
+import com.pharmacy.pos.iam.dto.RegisterRequest;
 import com.pharmacy.pos.iam.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register")
+    public ApiResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ApiResponse.success(authService.register(request));
+    }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
