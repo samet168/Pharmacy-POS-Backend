@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://ep-empty-surf-axyon6ok-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+    username: neondb_owner
+    password: ${DB_PASSWORD:npg_KEC0HO5ruAUw}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+
+cloudinary:
+  cloud-name: dedbijrpm
+  api-key: 214689579787225
+  api-secret: ${CLOUDINARY_API_SECRET:iSMOjoiGU7zjAjCskUXELQHGU8o}
+
+jwt:
+  secret: ${JWT_SECRET:your-long-random-jwt-secret-key-change-this-in-production-at-least-32-characters-long}
+  access-token-expiry-minutes: 30
+  refresh-token-expiry-days: 14
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  paths-to-match: /api/**
