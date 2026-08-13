@@ -29,7 +29,7 @@ public class OrderController {
     private final CheckoutService checkoutService;
 
     @PostMapping("/checkout")
-    @PreAuthorize("hasAuthority('orders.create')")
+    @PreAuthorize("hasAuthority('order.create')")
     public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(@Valid @RequestBody CheckoutRequest request) {
         CheckoutResponse response = checkoutService.checkout(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -37,7 +37,7 @@ public class OrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('orders.create')")
+    @PreAuthorize("hasAuthority('order.create')")
     public ResponseEntity<ApiResponse<OrderResponse>> create(@Valid @RequestBody OrderRequest request) {
         Order order = orderMapper.toEntity(request);
         order = orderRepository.save(order);
@@ -46,7 +46,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('orders.read')")
+    @PreAuthorize("hasAuthority('order.view')")
     public ResponseEntity<ApiResponse<OrderResponse>> getById(@PathVariable Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -54,7 +54,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('orders.read')")
+    @PreAuthorize("hasAuthority('order.view')")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAll(
             @RequestParam Long organizationId,
             @RequestParam(required = false) Long branchId,
@@ -82,7 +82,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('orders.update')")
+    @PreAuthorize("hasAuthority('order.update')")
     public ResponseEntity<ApiResponse<OrderResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody OrderRequest request) {
@@ -94,7 +94,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('orders.delete')")
+    @PreAuthorize("hasAuthority('order.delete')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         orderRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Order deleted successfully", null));

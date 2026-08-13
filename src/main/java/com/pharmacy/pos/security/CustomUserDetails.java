@@ -1,6 +1,8 @@
 package com.pharmacy.pos.security;
 
+import com.pharmacy.pos.iam.entity.Permission;
 import com.pharmacy.pos.iam.entity.User;
+import com.pharmacy.pos.iam.repository.RolePermissionRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,11 +18,15 @@ import java.util.stream.Collectors;
 public class CustomUserDetails implements UserDetails {
 
     private User user;
+    private RolePermissionRepository rolePermissionRepository;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (user.getRole() != null && user.getRole().getPermissions() != null) {
-            return user.getRole().getPermissions().stream()
+        if (user.getRole() != null) {
+            // Fetch permissions directly from database to avoid lazy loading issues
+            List<Permission> permissions = rolePermissionRepository.findPermissionsByRoleId(user.getRole().getId());
+            
+            return permissions.stream()
                     .map(permission -> new SimpleGrantedAuthority(permission.getCode()))
                     .collect(Collectors.toList());
         }

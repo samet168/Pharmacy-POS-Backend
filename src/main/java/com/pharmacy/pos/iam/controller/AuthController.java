@@ -7,13 +7,20 @@ import com.pharmacy.pos.iam.dto.PinLoginRequest;
 import com.pharmacy.pos.iam.dto.RefreshTokenRequest;
 import com.pharmacy.pos.iam.dto.RegisterRequest;
 import com.pharmacy.pos.iam.service.AuthService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@SecurityRequirements // Excludes global security requirement for auth endpoints
 public class AuthController {
 
     private final AuthService authService;
@@ -36,5 +43,17 @@ public class AuthController {
     @PostMapping("/pin-login")
     public ApiResponse<LoginResponse> pinLogin(@Valid @RequestBody PinLoginRequest request) {
         return ApiResponse.success(authService.pinLogin(request));
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<Map<String, Object>> getCurrentUser(Authentication authentication) {
+        Map<String, Object> userData = Map.of(
+            "username", authentication.getName(),
+            "authorities", authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()),
+            "authenticated", authentication.isAuthenticated()
+        );
+        return ApiResponse.success(userData);
     }
 }

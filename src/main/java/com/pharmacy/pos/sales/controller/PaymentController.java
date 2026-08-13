@@ -24,7 +24,7 @@ public class PaymentController {
     private final PaymentMapper paymentMapper;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('payments.create')")
+    @PreAuthorize("hasAuthority('payment.create')")
     public ResponseEntity<ApiResponse<PaymentResponse>> create(@Valid @RequestBody PaymentRequest request) {
         Payment payment = paymentMapper.toEntity(request);
         payment = paymentRepository.save(payment);
@@ -33,7 +33,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('payments.read')")
+    @PreAuthorize("hasAuthority('payment.view')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getById(@PathVariable Long id) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
@@ -41,14 +41,14 @@ public class PaymentController {
     }
 
     @GetMapping("/order/{orderId}")
-    @PreAuthorize("hasAuthority('payments.read')")
+    @PreAuthorize("hasAuthority('payment.view')")
     public ResponseEntity<ApiResponse<List<PaymentResponse>>> getByOrderId(@PathVariable Long orderId) {
         List<Payment> payments = paymentRepository.findByOrderId(orderId);
         return ResponseEntity.ok(ApiResponse.success("Payments retrieved successfully", paymentMapper.toResponseList(payments)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('payments.update')")
+    @PreAuthorize("hasAuthority('payment.update')")
     public ResponseEntity<ApiResponse<PaymentResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody PaymentRequest request) {
@@ -60,7 +60,7 @@ public class PaymentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('payments.delete')")
+    @PreAuthorize("hasAuthority('payment.delete')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         paymentRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Payment deleted successfully", null));

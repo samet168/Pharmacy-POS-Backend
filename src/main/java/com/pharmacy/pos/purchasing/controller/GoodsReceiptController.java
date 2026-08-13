@@ -19,37 +19,37 @@ public class GoodsReceiptController {
     private final GoodsReceiptService goodsReceiptService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('goods_receipt.create')")
+    @PreAuthorize("hasAuthority('purchase.receive')")
     public ApiResponse<GoodsReceiptResponse> create(@Valid @RequestBody GoodsReceiptRequest request) {
         return ApiResponse.success(goodsReceiptService.create(request));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('goods_receipt.view')")
+    @PreAuthorize("hasAuthority('purchase.view')")
     public ApiResponse<GoodsReceiptResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(goodsReceiptService.getById(id));
     }
 
     @GetMapping("/purchase-order/{purchaseOrderId}")
-    @PreAuthorize("hasAuthority('goods_receipt.view')")
+    @PreAuthorize("hasAuthority('purchase.view')")
     public ApiResponse<PageResponse<GoodsReceiptResponse>> getByPurchaseOrder(@PathVariable Long purchaseOrderId, Pageable pageable) {
         return ApiResponse.success(PageResponse.of(goodsReceiptService.getByPurchaseOrder(purchaseOrderId, pageable)));
     }
 
     @GetMapping("/branch/{branchId}")
-    @PreAuthorize("hasAuthority('goods_receipt.view')")
+    @PreAuthorize("hasAuthority('purchase.view')")
     public ApiResponse<PageResponse<GoodsReceiptResponse>> getByBranch(@PathVariable Long branchId, Pageable pageable) {
         return ApiResponse.success(PageResponse.of(goodsReceiptService.getByBranch(branchId, pageable)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('goods_receipt.view')")
+    @PreAuthorize("hasAuthority('purchase.view')")
     public ApiResponse<PageResponse<GoodsReceiptResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(goodsReceiptService.getAll(pageable)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('goods_receipt.delete')")
+    @PreAuthorize("hasAuthority('purchase.receive')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         goodsReceiptService.delete(id);
         return ApiResponse.success("Goods Receipt deleted successfully", null);

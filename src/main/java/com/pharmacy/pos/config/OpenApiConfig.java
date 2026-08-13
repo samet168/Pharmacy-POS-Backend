@@ -12,17 +12,24 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI pharmacyPosOpenAPI() {
+        // Define the security scheme
+        SecurityScheme bearerAuthScheme = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("JWT Bearer Token Authentication");
+
+        // Add global security requirement to apply to all endpoints
+        SecurityRequirement securityRequirement = new SecurityRequirement()
+                .addList("bearerAuth");
+
         return new OpenAPI()
                 .info(new Info()
                         .title("Pharmacy POS API")
                         .description("Multi-tenant, multi-branch Pharmacy POS backend with offline-first sync")
                         .version("1.0.0"))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes("Bearer Authentication",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                        .addSecuritySchemes("bearerAuth", bearerAuthScheme))
+                .addSecurityItem(securityRequirement);
     }
 }

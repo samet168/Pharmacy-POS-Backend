@@ -65,16 +65,35 @@ public class JwtService {
     }
 
     public Long extractOrganizationId(String token) {
-        return extractClaims(token).get("organizationId", Long.class);
+        Object orgId = extractClaims(token).get("organizationId");
+        if (orgId instanceof Integer) {
+            return ((Integer) orgId).longValue();
+        }
+        return (Long) orgId;
     }
 
     public Long extractRoleId(String token) {
-        return extractClaims(token).get("roleId", Long.class);
+        Object roleId = extractClaims(token).get("roleId");
+        if (roleId instanceof Integer) {
+            return ((Integer) roleId).longValue();
+        }
+        return (Long) roleId;
     }
 
     @SuppressWarnings("unchecked")
     public List<Long> extractBranchIds(String token) {
-        return extractClaims(token).get("branchIds", List.class);
+        List<?> branchIds = extractClaims(token).get("branchIds", List.class);
+        if (branchIds == null) {
+            return List.of();
+        }
+        return branchIds.stream()
+                .map(id -> {
+                    if (id instanceof Integer) {
+                        return ((Integer) id).longValue();
+                    }
+                    return (Long) id;
+                })
+                .toList();
     }
 
     public boolean isTokenValid(String token) {

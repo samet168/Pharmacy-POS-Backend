@@ -1,5 +1,7 @@
 package com.pharmacy.pos.iam.service;
 
+import com.pharmacy.pos.branch.entity.Branch;
+import com.pharmacy.pos.branch.repository.BranchRepository;
 import com.pharmacy.pos.common.exception.BusinessRuleException;
 import com.pharmacy.pos.common.exception.ResourceNotFoundException;
 import com.pharmacy.pos.iam.dto.LoginRequest;
@@ -39,6 +41,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OrganizationRepository organizationRepository;
     private final RoleRepository roleRepository;
+    private final BranchRepository branchRepository;
 
     @Transactional
     public LoginResponse register(RegisterRequest request) {
@@ -47,12 +50,23 @@ public class AuthService {
             throw new BusinessRuleException("Username already exists");
         }
 
-        // Load organization and role
+        // Load organization and role with better error messages
         Organization organization = organizationRepository.findById(request.getOrganizationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Organization", request.getOrganizationId()));
+                .orElseThrow(() -> new BusinessRuleException(
+                    "Invalid organizationId: no organization exists with id " + request.getOrganizationId() + 
+                    ". Create an organization first via POST /organizations, or use an existing id."));
         
         Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role", request.getRoleId()));
+                .orElseThrow(() -> new BusinessRuleException(
+                    "Invalid roleId: no role exists with id " + request.getRoleId() + 
+                    ". Use a valid role id from the system."));
+
+        // Validate that role belongs to organization or is a system role
+        if (role.getOrganization() != null && !role.getOrganization().getId().equals(organization.getId())) {
+            throw new BusinessRuleException(
+                "Invalid roleId: role " + request.getRoleId() + " does not belong to organization " + 
+                request.getOrganizationId() + ". Use a role that belongs to this organization or a system role.");
+        }
 
         // Create new user
         User user = new User();
@@ -69,9 +83,25 @@ public class AuthService {
 
         // Add branch association if provided
         if (request.getBranchId() != null) {
-            // TODO: Load and set Branch entity properly
-            // For now, we'll skip this as it requires Branch entity loading
-            log.info("TODO: Add branch association for user {} to branch {}", user.getId(), request.getBranchId());
+            Branch branch = branchRepository.findById(request.getBranchId())
+                    .orElseThrow(() -> new BusinessRuleException(
+                        "Invalid branchId: no branch exists with id " + request.getBranchId() + 
+                        ". Use a valid branch id from the organization."));
+            
+            // Validate that branch belongs to organization
+            if (!branch.getOrganization().getId().equals(organization.getId())) {
+                throw new BusinessRuleException(
+                    "Invalid branchId: branch " + request.getBranchId() + " does not belong to organization " + 
+                    request.getOrganizationId() + ". Use a branch that belongs to this organization.");
+            }
+            
+            // Create user-branch association
+            UserBranch userBranch = new UserBranch();
+            userBranch.setUser(user);
+            userBranch.setBranch(branch);
+            userBranchRepository.save(userBranch);
+            
+            log.info("Added branch association for user {} to branch {}", user.getId(), request.getBranchId());
         }
 
         List<Long> branchIds = userBranchRepository.findBranchIdsByUserId(user.getId());

@@ -21,7 +21,7 @@ public class OrderReturnController {
     private final OrderReturnService orderReturnService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('returns.create')")
+    @PreAuthorize("hasAuthority('order.return')")
     public ResponseEntity<ApiResponse<OrderReturnResponse>> processReturn(@Valid @RequestBody OrderReturnRequest request) {
         OrderReturnResponse response = orderReturnService.processReturn(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -29,14 +29,14 @@ public class OrderReturnController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('returns.read')")
+    @PreAuthorize("hasAuthority('order.view')")
     public ResponseEntity<ApiResponse<OrderReturnResponse>> getById(@PathVariable Long id) {
         OrderReturnResponse response = orderReturnService.getById(id);
         return ResponseEntity.ok(ApiResponse.success("Return retrieved successfully", response));
     }
 
     @GetMapping("/order/{orderId}")
-    @PreAuthorize("hasAuthority('returns.read')")
+    @PreAuthorize("hasAuthority('order.view')")
     public ResponseEntity<ApiResponse<List<OrderReturnResponse>>> getByOrderId(@PathVariable Long orderId) {
         List<OrderReturnResponse> responses = orderReturnService.getByOrderId(orderId);
         return ResponseEntity.ok(ApiResponse.success("Returns retrieved successfully", responses));
