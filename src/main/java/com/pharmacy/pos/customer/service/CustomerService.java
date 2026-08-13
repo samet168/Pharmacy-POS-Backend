@@ -6,7 +6,9 @@ import com.pharmacy.pos.customer.dto.CustomerRequest;
 import com.pharmacy.pos.customer.dto.CustomerResponse;
 import com.pharmacy.pos.customer.entity.Customer;
 import com.pharmacy.pos.customer.mapper.CustomerMapper;
+import com.pharmacy.pos.customer.repository.CustomerAllergyRepository;
 import com.pharmacy.pos.customer.repository.CustomerRepository;
+import com.pharmacy.pos.service.CloudinaryService;
 import com.pharmacy.pos.tenant.entity.Organization;
 import com.pharmacy.pos.tenant.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -24,6 +27,8 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final OrganizationRepository organizationRepository;
+    private final CustomerAllergyRepository customerAllergyRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Transactional
     public CustomerResponse create(CustomerRequest request) {
@@ -45,6 +50,13 @@ public class CustomerService {
     }
 
     @Transactional
+    public CustomerResponse createWithImage(CustomerRequest request, MultipartFile file) throws Exception {
+        String imageUrl = cloudinaryService.uploadCustomerImage(file);
+        request.setImageUrl(imageUrl);
+        return create(request);
+    }
+
+    @Transactional
     public CustomerResponse update(Long id, CustomerRequest request) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", id));
@@ -60,6 +72,35 @@ public class CustomerService {
             customer.setOrganization(organization);
         }
 
+        // Note: imageUrl is handled separately in updateWithImage method
+        // We don't use the mapper for imageUrl to preserve existing values
+        customerMapper.updateEntityFromRequest(request, customer);
+        customer = customerRepository.save(customer);
+        return customerMapper.toResponse(customer);
+    }
+
+    @Transactional
+    public CustomerResponse updateWithImage(Long id, CustomerRequest request, MultipartFile file) throws Exception {
+        String imageUrl = cloudinaryService.uploadCustomerImage(file);
+        
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", id));
+
+        if (request.getPhone() != null && !request.getPhone().equals(customer.getPhone()) &&
+            customerRepository.existsByOrganizationIdAndPhone(request.getOrganizationId(), request.getPhone())) {
+            throw new DuplicateResourceException("Customer with this phone number already exists for this organization");
+        }
+
+        if (!customer.getOrganization().getId().equals(request.getOrganizationId())) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization", request.getOrganizationId()));
+            customer.setOrganization(organization);
+        }
+
+        // Manually set imageUrl since mapper ignores it
+        customer.setImageUrl(imageUrl);
+        
+        // Use mapper for other fields (but not imageUrl)
         customerMapper.updateEntityFromRequest(request, customer);
         customer = customerRepository.save(customer);
         return customerMapper.toResponse(customer);
@@ -91,6 +132,10 @@ public class CustomerService {
     public void delete(Long id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", id));
+        
+        // Delete customer allergies first to avoid foreign key constraint
+        customerAllergyRepository.deleteByCustomerId(id);
+        
         customerRepository.delete(customer);
     }
 }

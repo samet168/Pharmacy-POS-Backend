@@ -14,6 +14,7 @@ public class DoctorResponse {
     private String name;
     private String licenseNumber;
     private String phone;
+    private String imageUrl;
     private String clinicName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

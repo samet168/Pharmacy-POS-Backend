@@ -34,7 +34,7 @@ import java.util.List;
 @Slf4j
 public class SetupService {
 
-    private final com.pharmacy.pos.tenant.repository.OrganizationRepository organizationRepository;
+    private final OrganizationRepository organizationRepository;
     private final BranchRepository branchRepository;
     private final BranchSettingsRepository branchSettingsRepository;
     private final RoleRepository roleRepository;
@@ -42,8 +42,8 @@ public class SetupService {
     private final UserBranchRepository userBranchRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final com.pharmacy.pos.iam.repository.PermissionRepository permissionRepository;
-    private final com.pharmacy.pos.iam.repository.RolePermissionRepository rolePermissionRepository;
+    private final PermissionRepository permissionRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Transactional
     public LoginResponse bootstrap(BootstrapRequest request) {
@@ -53,7 +53,7 @@ public class SetupService {
         }
 
         // 1. Create Organization
-        com.pharmacy.pos.tenant.entity.Organization organization = new com.pharmacy.pos.tenant.entity.Organization();
+        Organization organization = new Organization();
         organization.setName(request.getOrganizationName());
         organization.setSlug(request.getOrganizationSlug());
         organization.setBaseCurrency("USD");
@@ -168,7 +168,6 @@ public class SetupService {
             // Owner: ALL permissions
             if (!rolePermissionRepository.existsByRoleIdAndPermissionId(ownerRole.getId(), permission.getId())) {
                 assignPermissionToRole(ownerRole, permission);
-                counters[1]++;
             }
 
             // Manager: all except user.manage, role.manage, permission.manage, branch.manage, settings.manage, organization.create/update/delete, subscription.create/update/delete
@@ -252,7 +251,6 @@ public class SetupService {
             // Owner: ALL permissions
             if (!rolePermissionRepository.existsByRoleIdAndPermissionId(ownerRole.getId(), permission.getId())) {
                 assignPermissionToRole(ownerRole, permission);
-                counters[1]++;
             }
 
             // Manager: all except user.manage, role.manage, branch.manage, settings.manage

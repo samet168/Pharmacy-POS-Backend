@@ -26,6 +26,8 @@ public class UserRequest {
 
     private String pinCode;
 
+    private String imageUrl;
+
     private Boolean isActive;
 
     private List<Long> branchIds;

@@ -17,8 +17,8 @@ spring:
     locations: classpath:db/migration
 
 cloudinary:
-  cloud-name: dedbijrpm
-  api-key: 214689579787225
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dedbijrpm}
+  api-key: ${CLOUDINARY_API_KEY:214689579787225}
   api-secret: ${CLOUDINARY_API_SECRET:iSMOjoiGU7zjAjCskUXELQHGU8o}
 
 jwt:

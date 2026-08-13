@@ -23,6 +23,7 @@ public interface CustomerMapper {
     @Mapping(target = "organization", ignore = true)
     @Mapping(target = "allergies", ignore = true)
     @Mapping(target = "prescriptions", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromRequest(CustomerRequest request, @MappingTarget Customer entity);

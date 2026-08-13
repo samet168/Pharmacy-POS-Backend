@@ -52,6 +52,9 @@ public class Product extends TimestampEntity {
     @Column(name = "min_stock_alert")
     private int minStockAlert = 10;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "is_active")
     private boolean active = true;
 

@@ -19,6 +19,7 @@ public class ProductResponse {
     private Long defaultSupplierId;
     private boolean requiresPrescription;
     private boolean isControlledSubstance;
+    private String imageUrl;
     private int minStockAlert;
     private boolean isActive;
     private LocalDateTime createdAt;

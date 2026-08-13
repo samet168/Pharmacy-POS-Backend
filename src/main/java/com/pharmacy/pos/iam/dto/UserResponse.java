@@ -16,6 +16,7 @@ public class UserResponse {
     private String name;
     private String username;
     private String phone;
+    private String imageUrl;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

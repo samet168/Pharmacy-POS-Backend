@@ -18,5 +18,7 @@ public class CustomerRequest {
 
     private LocalDate dateOfBirth;
 
+    private String imageUrl;
+
     private Integer loyaltyPoints;
 }

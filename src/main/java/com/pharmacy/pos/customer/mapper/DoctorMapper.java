@@ -19,6 +19,7 @@ public interface DoctorMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "prescriptions", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromRequest(DoctorRequest request, @MappingTarget Doctor entity);

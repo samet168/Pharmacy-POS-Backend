@@ -5,11 +5,18 @@ import com.pharmacy.pos.common.PageResponse;
 import com.pharmacy.pos.catalog.dto.ProductRequest;
 import com.pharmacy.pos.catalog.dto.ProductResponse;
 import com.pharmacy.pos.catalog.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -18,15 +25,28 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('product.create')")
-    public ApiResponse<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
+    @Operation(summary = "Create product", description = "Create a new product with optional image upload")
+    public ApiResponse<ProductResponse> create(
+            @Parameter(description = "Product data as JSON", required = true, content = @Content(schema = @Schema(implementation = ProductRequest.class))) @RequestPart(value = "product", required = true) @Valid ProductRequest request,
+            @Parameter(description = "Image file (optional)") @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            return ApiResponse.success(productService.createWithImage(request, file));
+        }
         return ApiResponse.success(productService.create(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('product.update')")
-    public ApiResponse<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+    @Operation(summary = "Update product", description = "Update product with optional image upload")
+    public ApiResponse<ProductResponse> update(
+            @PathVariable Long id,
+            @Parameter(description = "Product data as JSON", required = true, content = @Content(schema = @Schema(implementation = ProductRequest.class))) @RequestPart(value = "product", required = true) @Valid ProductRequest request,
+            @Parameter(description = "Image file (optional)") @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            return ApiResponse.success(productService.updateWithImage(id, request, file));
+        }
         return ApiResponse.success(productService.update(id, request));
     }
 

@@ -21,7 +21,9 @@ public interface UserMapper {
 
     UserResponse toResponse(User entity);
 
-    @Mapping(target = "passwordHash", source = "password")
+    @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "pinCode", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "organization", ignore = true)
     @Mapping(target = "role", ignore = true)

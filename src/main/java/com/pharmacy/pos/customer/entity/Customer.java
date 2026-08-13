@@ -34,10 +34,13 @@ public class Customer extends TimestampEntity {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "loyalty_points")
     private Integer loyaltyPoints = 0;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer")
     private Set<CustomerAllergy> allergies = new HashSet<>();
 
     @OneToMany(mappedBy = "customer")

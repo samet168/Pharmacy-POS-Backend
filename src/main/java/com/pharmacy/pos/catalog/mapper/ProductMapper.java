@@ -27,6 +27,7 @@ public interface ProductMapper {
     @Mapping(target = "genericNameId", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "defaultSupplier", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "productUnits", ignore = true)

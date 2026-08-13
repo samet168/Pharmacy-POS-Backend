@@ -15,6 +15,7 @@ public class CustomerResponse {
     private Long organizationId;
     private String name;
     private String phone;
+    private String imageUrl;
     private LocalDate dateOfBirth;
     private Integer loyaltyPoints;
     private LocalDateTime createdAt;

@@ -27,5 +27,7 @@ public class ProductRequest {
 
     private Integer minStockAlert;
 
+    private String imageUrl;
+
     private Boolean isActive;
 }

@@ -40,6 +40,9 @@ public class User extends TimestampEntity {
 
     private String pinCode;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "is_active")
     private boolean active = true;
 

@@ -12,5 +12,7 @@ public class DoctorRequest {
 
     private String phone;
 
+    private String imageUrl;
+
     private String clinicName;
 }

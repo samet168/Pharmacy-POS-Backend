@@ -5,11 +5,18 @@ import com.pharmacy.pos.common.PageResponse;
 import com.pharmacy.pos.customer.dto.CustomerRequest;
 import com.pharmacy.pos.customer.dto.CustomerResponse;
 import com.pharmacy.pos.customer.service.CustomerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/customers")
@@ -18,15 +25,28 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('customer.create')")
-    public ApiResponse<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
+    @Operation(summary = "Create customer", description = "Create a new customer with optional image upload")
+    public ApiResponse<CustomerResponse> create(
+            @Parameter(description = "Customer data as JSON", required = true, content = @Content(schema = @Schema(implementation = CustomerRequest.class))) @RequestPart(value = "customer", required = true) @Valid CustomerRequest request,
+            @Parameter(description = "Image file (optional)") @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            return ApiResponse.success(customerService.createWithImage(request, file));
+        }
         return ApiResponse.success(customerService.create(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('customer.update')")
-    public ApiResponse<CustomerResponse> update(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
+    @Operation(summary = "Update customer", description = "Update customer with optional image upload")
+    public ApiResponse<CustomerResponse> update(
+            @PathVariable Long id,
+            @Parameter(description = "Customer data as JSON", required = true, content = @Content(schema = @Schema(implementation = CustomerRequest.class))) @RequestPart(value = "customer", required = true) @Valid CustomerRequest request,
+            @Parameter(description = "Image file (optional)") @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            return ApiResponse.success(customerService.updateWithImage(id, request, file));
+        }
         return ApiResponse.success(customerService.update(id, request));
     }
 

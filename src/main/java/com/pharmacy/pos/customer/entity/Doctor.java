@@ -26,6 +26,9 @@ public class Doctor extends TimestampEntity {
 
     private String phone;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "clinic_name")
     private String clinicName;
 
