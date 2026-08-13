@@ -144,7 +144,10 @@ public class SetupService {
             "shift.open", "shift.close", "shift.reconcile", "shift.view", "shift.delete",
             "user.view", "user.create", "user.update", "user.delete", "user.manage",
             "role.view", "role.create", "role.update", "role.delete", "role.manage",
+            "permission.view", "permission.create", "permission.update", "permission.delete",
             "branch.view", "branch.create", "branch.update", "branch.delete", "branch.manage", "branch.settings.view", "branch.settings.update",
+            "organization.view", "organization.create", "organization.update", "organization.delete",
+            "subscription.view", "subscription.create", "subscription.update", "subscription.delete",
             "settings.manage", "report.view", "audit.view",
             "customer.view", "customer.create", "customer.update", "customer.delete", "customer.manage",
             "doctor.view", "doctor.create", "doctor.update", "doctor.delete", "doctor.manage",
@@ -163,11 +166,16 @@ public class SetupService {
                     });
 
             // Owner: ALL permissions
-            assignPermissionToRole(ownerRole, permission);
+            if (!rolePermissionRepository.existsByRoleIdAndPermissionId(ownerRole.getId(), permission.getId())) {
+                assignPermissionToRole(ownerRole, permission);
+                counters[1]++;
+            }
 
-            // Manager: all except user.manage, role.manage, branch.manage, settings.manage
-            if (!code.equals("user.manage") && !code.equals("role.manage") && 
-                !code.equals("branch.manage") && !code.equals("settings.manage")) {
+            // Manager: all except user.manage, role.manage, permission.manage, branch.manage, settings.manage, organization.create/update/delete, subscription.create/update/delete
+            if (!code.equals("user.manage") && !code.equals("role.manage") && !code.equals("permission.manage") &&
+                !code.equals("branch.manage") && !code.equals("settings.manage") &&
+                !code.equals("organization.create") && !code.equals("organization.update") && !code.equals("organization.delete") &&
+                !code.equals("subscription.create") && !code.equals("subscription.update") && !code.equals("subscription.delete")) {
                 assignPermissionToRole(managerRole, permission);
             }
 
@@ -196,9 +204,15 @@ public class SetupService {
 
     @Transactional
     public String fixPermissions() {
-        // Find Owner role (system role)
+        // Find all system roles
         Role ownerRole = roleRepository.findByNameAndSystemRole("Owner", true)
                 .orElseThrow(() -> new BusinessRuleException("Owner role not found"));
+        Role managerRole = roleRepository.findByNameAndSystemRole("Manager", true)
+                .orElseThrow(() -> new BusinessRuleException("Manager role not found"));
+        Role pharmacistRole = roleRepository.findByNameAndSystemRole("Pharmacist", true)
+                .orElseThrow(() -> new BusinessRuleException("Pharmacist role not found"));
+        Role cashierRole = roleRepository.findByNameAndSystemRole("Cashier", true)
+                .orElseThrow(() -> new BusinessRuleException("Cashier role not found"));
 
         // Define ALL permissions that should exist
         String[] permissionCodes = {
@@ -210,7 +224,10 @@ public class SetupService {
             "shift.open", "shift.close", "shift.reconcile", "shift.view", "shift.delete",
             "user.view", "user.create", "user.update", "user.delete", "user.manage",
             "role.view", "role.create", "role.update", "role.delete", "role.manage",
+            "permission.view", "permission.create", "permission.update", "permission.delete",
             "branch.view", "branch.create", "branch.update", "branch.delete", "branch.manage", "branch.settings.view", "branch.settings.update",
+            "organization.view", "organization.create", "organization.update", "organization.delete",
+            "subscription.view", "subscription.create", "subscription.update", "subscription.delete",
             "settings.manage", "report.view", "audit.view",
             "customer.view", "customer.create", "customer.update", "customer.delete", "customer.manage",
             "doctor.view", "doctor.create", "doctor.update", "doctor.delete", "doctor.manage",
@@ -232,14 +249,41 @@ public class SetupService {
                         return permissionRepository.save(newPermission);
                     });
 
-            // Assign to Owner role if not already assigned
+            // Owner: ALL permissions
             if (!rolePermissionRepository.existsByRoleIdAndPermissionId(ownerRole.getId(), permission.getId())) {
                 assignPermissionToRole(ownerRole, permission);
                 counters[1]++;
             }
+
+            // Manager: all except user.manage, role.manage, branch.manage, settings.manage
+            if (!code.equals("user.manage") && !code.equals("role.manage") && 
+                !code.equals("branch.manage") && !code.equals("settings.manage")) {
+                if (!rolePermissionRepository.existsByRoleIdAndPermissionId(managerRole.getId(), permission.getId())) {
+                    assignPermissionToRole(managerRole, permission);
+                    counters[1]++;
+                }
+            }
+
+            // Pharmacist: order.void, stock.adjust, shift.open, shift.close, report.view, customer.view, doctor.view, prescription.view
+            if (code.equals("order.void") || code.equals("stock.adjust") || 
+                code.equals("shift.open") || code.equals("shift.close") || code.equals("report.view") ||
+                code.equals("customer.view") || code.equals("doctor.view") || code.equals("prescription.view")) {
+                if (!rolePermissionRepository.existsByRoleIdAndPermissionId(pharmacistRole.getId(), permission.getId())) {
+                    assignPermissionToRole(pharmacistRole, permission);
+                    counters[1]++;
+                }
+            }
+
+            // Cashier: shift.open, shift.close
+            if (code.equals("shift.open") || code.equals("shift.close")) {
+                if (!rolePermissionRepository.existsByRoleIdAndPermissionId(cashierRole.getId(), permission.getId())) {
+                    assignPermissionToRole(cashierRole, permission);
+                    counters[1]++;
+                }
+            }
         }
 
-        return String.format("Permissions fixed successfully for Owner role. Created %d new permissions, assigned %d permissions to Owner role. Total: %d permissions.", 
+        return String.format("Permissions fixed successfully for all roles. Created %d new permissions, assigned %d permissions to roles. Total: %d permissions.", 
             counters[0], counters[1], permissionCodes.length);
     }
 }
