@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface GoodsReceiptRepository extends JpaRepository<GoodsReceipt, Long> {
     Page<GoodsReceipt> findByPurchaseOrderId(Long purchaseOrderId, Pageable pageable);
     Page<GoodsReceipt> findByBranchId(Long branchId, Pageable pageable);
+    Page<GoodsReceipt> findByBranchOrganizationId(Long organizationId, Pageable pageable);
 }

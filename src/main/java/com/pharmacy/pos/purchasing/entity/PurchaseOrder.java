@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +43,12 @@ public class PurchaseOrder extends TimestampEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PurchaseStatus status = PurchaseStatus.DRAFT;
+
+    @Column(name = "order_date")
+    private java.time.LocalDate orderDate;
+
+    @Column(name = "expected_delivery_date")
+    private java.time.LocalDate expectedDeliveryDate;
 
     private BigDecimal totalAmount;
 

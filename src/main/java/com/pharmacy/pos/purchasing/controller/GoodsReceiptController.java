@@ -38,9 +38,19 @@ public class GoodsReceiptController {
         return ApiResponse.success(PageResponse.of(goodsReceiptService.getByBranch(branchId, pageable)));
     }
 
+    @GetMapping("/organization/{organizationId}")
+    public ApiResponse<PageResponse<GoodsReceiptResponse>> getByOrganization(@PathVariable Long organizationId, Pageable pageable) {
+        return ApiResponse.success(PageResponse.of(goodsReceiptService.getByOrganization(organizationId, pageable)));
+    }
+
     @GetMapping
     public ApiResponse<PageResponse<GoodsReceiptResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(goodsReceiptService.getAll(pageable)));
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<GoodsReceiptResponse> update(@PathVariable Long id, @Valid @RequestBody GoodsReceiptRequest request) {
+        return ApiResponse.success(goodsReceiptService.update(id, request));
     }
 
     @DeleteMapping("/{id}")

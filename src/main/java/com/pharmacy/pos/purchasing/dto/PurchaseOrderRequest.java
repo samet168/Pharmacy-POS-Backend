@@ -22,6 +22,10 @@ public class PurchaseOrderRequest {
     @NotBlank
     private String poNumber;
 
+    private String orderDate;
+
+    private String expectedDeliveryDate;
+
     private PurchaseStatus status;
 
     private BigDecimal totalAmount;

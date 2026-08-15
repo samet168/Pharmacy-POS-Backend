@@ -6,6 +6,8 @@ import com.pharmacy.pos.catalog.entity.Category;
 import com.pharmacy.pos.catalog.mapper.CategoryMapper;
 import com.pharmacy.pos.catalog.repository.CategoryRepository;
 import com.pharmacy.pos.common.exception.ResourceNotFoundException;
+import com.pharmacy.pos.tenant.entity.Organization;
+import com.pharmacy.pos.tenant.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final OrganizationRepository organizationRepository;
 
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll().stream()
@@ -41,6 +44,13 @@ public class CategoryService {
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
         Category category = categoryMapper.toEntity(request);
+        
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + request.getOrganizationId()));
+            category.setOrganization(organization);
+        }
+        
         if (request.getParentId() != null) {
             Category parent = categoryRepository.findById(request.getParentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Parent category not found with id: " + request.getParentId()));
@@ -55,6 +65,12 @@ public class CategoryService {
     public CategoryResponse update(Long id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + request.getOrganizationId()));
+            category.setOrganization(organization);
+        }
 
         if (request.getParentId() != null) {
             Category parent = categoryRepository.findById(request.getParentId())

@@ -61,6 +61,13 @@ public class PurchaseOrderService {
         purchaseOrder.setBranch(branch);
         purchaseOrder.setSupplier(supplier);
         purchaseOrder.setStatus(PurchaseStatus.DRAFT);
+        
+        if (request.getOrderDate() != null && !request.getOrderDate().isEmpty()) {
+            purchaseOrder.setOrderDate(java.time.LocalDate.parse(request.getOrderDate()));
+        }
+        if (request.getExpectedDeliveryDate() != null && !request.getExpectedDeliveryDate().isEmpty()) {
+            purchaseOrder.setExpectedDeliveryDate(java.time.LocalDate.parse(request.getExpectedDeliveryDate()));
+        }
 
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             Set<PurchaseOrderItem> items = new HashSet<>();
@@ -110,6 +117,13 @@ public class PurchaseOrderService {
         }
 
         purchaseOrderMapper.updateEntityFromRequest(request, purchaseOrder);
+        
+        if (request.getOrderDate() != null && !request.getOrderDate().isEmpty()) {
+            purchaseOrder.setOrderDate(java.time.LocalDate.parse(request.getOrderDate()));
+        }
+        if (request.getExpectedDeliveryDate() != null && !request.getExpectedDeliveryDate().isEmpty()) {
+            purchaseOrder.setExpectedDeliveryDate(java.time.LocalDate.parse(request.getExpectedDeliveryDate()));
+        }
 
         if (request.getItems() != null) {
             purchaseOrder.getItems().clear();

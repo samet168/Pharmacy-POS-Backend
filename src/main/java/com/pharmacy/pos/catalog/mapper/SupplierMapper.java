@@ -3,10 +3,16 @@ package com.pharmacy.pos.catalog.mapper;
 import com.pharmacy.pos.catalog.dto.SupplierRequest;
 import com.pharmacy.pos.catalog.dto.SupplierResponse;
 import com.pharmacy.pos.catalog.entity.Supplier;
+import com.pharmacy.pos.tenant.entity.Organization;
+import com.pharmacy.pos.tenant.repository.OrganizationRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SupplierMapper {
+
+    private final OrganizationRepository organizationRepository;
 
     public Supplier toEntity(SupplierRequest request) {
         Supplier supplier = new Supplier();
@@ -17,6 +23,14 @@ public class SupplierMapper {
         supplier.setAddress(request.getAddress());
         supplier.setTaxId(request.getTaxId());
         supplier.setActive(request.isActive());
+        
+        // Set organization from organizationId
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new IllegalArgumentException("Organization not found with id: " + request.getOrganizationId()));
+            supplier.setOrganization(organization);
+        }
+        
         return supplier;
     }
 
@@ -45,5 +59,12 @@ public class SupplierMapper {
         supplier.setAddress(request.getAddress());
         supplier.setTaxId(request.getTaxId());
         supplier.setActive(request.isActive());
+        
+        // Update organization if organizationId is provided
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new IllegalArgumentException("Organization not found with id: " + request.getOrganizationId()));
+            supplier.setOrganization(organization);
+        }
     }
 }

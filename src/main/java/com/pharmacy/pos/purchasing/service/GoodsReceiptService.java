@@ -175,6 +175,25 @@ public class GoodsReceiptService {
         return goodsReceiptMapper.toResponse(goodsReceipt);
     }
 
+    @Transactional
+    public GoodsReceiptResponse update(Long id, GoodsReceiptRequest request) {
+        GoodsReceipt goodsReceipt = goodsReceiptRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Goods Receipt", id));
+
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(request.getPurchaseOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Order", request.getPurchaseOrderId()));
+
+        Branch branch = branchRepository.findById(request.getBranchId())
+                .orElseThrow(() -> new ResourceNotFoundException("Branch", request.getBranchId()));
+
+        goodsReceiptMapper.updateEntityFromRequest(request, goodsReceipt);
+        goodsReceipt.setPurchaseOrder(purchaseOrder);
+        goodsReceipt.setBranch(branch);
+
+        goodsReceipt = goodsReceiptRepository.save(goodsReceipt);
+        return goodsReceiptMapper.toResponse(goodsReceipt);
+    }
+
     public Page<GoodsReceiptResponse> getByPurchaseOrder(Long purchaseOrderId, Pageable pageable) {
         return goodsReceiptRepository.findByPurchaseOrderId(purchaseOrderId, pageable)
                 .map(goodsReceiptMapper::toResponse);
@@ -182,6 +201,11 @@ public class GoodsReceiptService {
 
     public Page<GoodsReceiptResponse> getByBranch(Long branchId, Pageable pageable) {
         return goodsReceiptRepository.findByBranchId(branchId, pageable)
+                .map(goodsReceiptMapper::toResponse);
+    }
+
+    public Page<GoodsReceiptResponse> getByOrganization(Long organizationId, Pageable pageable) {
+        return goodsReceiptRepository.findByBranchOrganizationId(organizationId, pageable)
                 .map(goodsReceiptMapper::toResponse);
     }
 

@@ -12,6 +12,8 @@ public class CategoryRequest {
 
     private Long parentId;
 
+    private Long organizationId;
+
     private boolean active = true;
 
     public boolean isActive() {

@@ -19,6 +19,8 @@ public interface UserMapper {
     @Mapping(target = "active", ignore = true)
     User toEntity(UserRequest request);
 
+    @Mapping(target = "roleId", source = "role.id")
+    @Mapping(target = "organizationId", source = "organization.id")
     UserResponse toResponse(User entity);
 
     @Mapping(target = "passwordHash", ignore = true)
