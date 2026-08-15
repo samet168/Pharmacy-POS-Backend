@@ -4,6 +4,7 @@ import com.pharmacy.pos.branch.entity.Branch;
 import com.pharmacy.pos.branch.repository.BranchRepository;
 import com.pharmacy.pos.common.exception.BusinessRuleException;
 import com.pharmacy.pos.common.exception.ResourceNotFoundException;
+import com.pharmacy.pos.iam.dto.ChangePasswordRequest;
 import com.pharmacy.pos.iam.dto.LoginRequest;
 import com.pharmacy.pos.iam.dto.LoginResponse;
 import com.pharmacy.pos.iam.dto.PinLoginRequest;
@@ -233,5 +234,36 @@ public class AuthService {
                 user.getRole().getId(),
                 user.getRole().getName()
         );
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!user.isActive()) {
+            throw new BusinessRuleException("User account is inactive");
+        }
+
+        // Validate current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("Current password is incorrect");
+        }
+
+        // Validate new password is different from current
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("New password must be different from current password");
+        }
+
+        // Validate password confirmation
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BusinessRuleException("New password and confirm password do not match");
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password changed successfully for user {}", userId);
     }
 }

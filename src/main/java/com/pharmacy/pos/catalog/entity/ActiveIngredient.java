@@ -1,6 +1,7 @@
 package com.pharmacy.pos.catalog.entity;
 
 import com.pharmacy.pos.common.TimestampEntity;
+import com.pharmacy.pos.tenant.entity.Organization;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,8 +19,15 @@ public class ActiveIngredient extends TimestampEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "name_kh")
+    private String nameKh;
 
     @Column(columnDefinition = "TEXT")
     private String description;

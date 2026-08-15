@@ -18,6 +18,8 @@ import com.pharmacy.pos.sales.repository.OrderReturnItemRepository;
 import com.pharmacy.pos.sales.repository.OrderReturnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,5 +117,10 @@ public class OrderReturnService {
     public List<OrderReturnResponse> getByOrderId(Long orderId) {
         List<OrderReturn> returns = orderReturnRepository.findByOrderId(orderId);
         return orderReturnMapper.toResponseList(returns);
+    }
+
+    public Page<OrderReturnResponse> getAll(Pageable pageable) {
+        Page<OrderReturn> returns = orderReturnRepository.findAll(pageable);
+        return returns.map(orderReturnMapper::toResponse);
     }
 }

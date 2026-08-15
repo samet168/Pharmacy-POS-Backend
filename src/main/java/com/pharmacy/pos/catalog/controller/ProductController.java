@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,6 +67,26 @@ public class ProductController {
     @PreAuthorize("hasAuthority('product.view')")
     public ApiResponse<PageResponse<ProductResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(productService.getAll(pageable)));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('product.view')")
+    @Operation(summary = "Search products", description = "Search products by name, SKU, or barcode")
+    public ApiResponse<PageResponse<ProductResponse>> search(
+            @Parameter(description = "Organization ID") @RequestParam Long organizationId,
+            @Parameter(description = "Search query") @RequestParam String query,
+            @Parameter(description = "Branch ID (optional)") @RequestParam(required = false) Long branchId,
+            Pageable pageable) {
+        return ApiResponse.success(PageResponse.of(productService.search(organizationId, query, branchId, pageable)));
+    }
+
+    @GetMapping("/barcode/{barcode}")
+    @PreAuthorize("hasAuthority('product.view')")
+    @Operation(summary = "Get product by barcode", description = "Get product by barcode/SKU")
+    public ApiResponse<ProductResponse> getByBarcode(
+            @Parameter(description = "Organization ID") @RequestParam Long organizationId,
+            @Parameter(description = "Barcode/SKU") @PathVariable String barcode) {
+        return ApiResponse.success(productService.getByBarcode(organizationId, barcode));
     }
 
     @DeleteMapping("/{id}")

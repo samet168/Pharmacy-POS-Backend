@@ -128,6 +128,12 @@ public class CustomerService {
                 .map(customerMapper::toResponse);
     }
 
+    public Page<CustomerResponse> search(Long organizationId, String query, Pageable pageable) {
+        return customerRepository.findByOrganizationIdAndNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
+                organizationId, query, query, pageable)
+                .map(customerMapper::toResponse);
+    }
+
     @Transactional
     public void delete(Long id) {
         Customer customer = customerRepository.findById(id)

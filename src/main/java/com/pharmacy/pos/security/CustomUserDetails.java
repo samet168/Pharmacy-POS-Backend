@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,9 +27,18 @@ public class CustomUserDetails implements UserDetails {
             // Fetch permissions directly from database to avoid lazy loading issues
             List<Permission> permissions = rolePermissionRepository.findPermissionsByRoleId(user.getRole().getId());
             
-            return permissions.stream()
+            // Add role as authority (Spring Security expects ROLE_ prefix for hasRole())
+            String roleAuthority = "ROLE_" + user.getRole().getName().toUpperCase();
+            
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            
+            authorities.addAll(permissions.stream()
                     .map(permission -> new SimpleGrantedAuthority(permission.getCode()))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
+            
+            authorities.add(new SimpleGrantedAuthority(roleAuthority));
+            
+            return authorities;
         }
         return List.of();
     }

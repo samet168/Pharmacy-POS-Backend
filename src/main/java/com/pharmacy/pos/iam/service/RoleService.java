@@ -64,6 +64,11 @@ public class RoleService {
                 .map(roleMapper::toResponse);
     }
 
+    public Page<RoleResponse> getByOrganization(Long organizationId, Pageable pageable) {
+        return roleRepository.findByOrganizationId(organizationId, pageable)
+                .map(roleMapper::toResponse);
+    }
+
     @Transactional
     public void delete(Long id) {
         Role role = roleRepository.findById(id)

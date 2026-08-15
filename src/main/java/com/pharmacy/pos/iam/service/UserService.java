@@ -207,6 +207,11 @@ public class UserService {
                 .map(userMapper::toResponse);
     }
 
+    public Page<UserResponse> getByOrganization(Long organizationId, Pageable pageable) {
+        return userRepository.findByOrganizationId(organizationId, pageable)
+                .map(userMapper::toResponse);
+    }
+
     @Transactional
     public void delete(Long id) {
         User user = userRepository.findById(id)

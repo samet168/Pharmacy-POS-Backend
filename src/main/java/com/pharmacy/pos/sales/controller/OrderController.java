@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,7 +30,7 @@ public class OrderController {
     private final CheckoutService checkoutService;
 
     @PostMapping("/checkout")
-    @PreAuthorize("hasAuthority('order.create')")
+    @PreAuthorize("hasAuthority('order.checkout')")
     public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(@Valid @RequestBody CheckoutRequest request) {
         CheckoutResponse response = checkoutService.checkout(request);
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -26,6 +26,9 @@ public class Supplier extends TimestampEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "tax_id")
+    private String taxId;
+
     private String contactPerson;
 
     private String phone;

@@ -98,6 +98,17 @@ public class ShiftService {
                 .map(shiftMapper::toResponse);
     }
 
+    public ShiftResponse getCurrentShift(Long userId) {
+        return shiftRepository.findByUserIdAndStatus(userId, com.pharmacy.pos.common.enums.ShiftStatus.OPEN)
+                .map(shiftMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("No open shift found for user"));
+    }
+
+    public Page<ShiftResponse> getByUser(Long userId, Pageable pageable) {
+        return shiftRepository.findByUserIdOrderByOpenedAtDesc(userId, pageable)
+                .map(shiftMapper::toResponse);
+    }
+
     public Page<ShiftResponse> getAll(Pageable pageable) {
         return shiftRepository.findAll(pageable)
                 .map(shiftMapper::toResponse);

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +20,6 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('organization.create')")
     public ApiResponse<OrganizationResponse> create(@Valid @RequestBody OrganizationRequest request) {
         return ApiResponse.success(organizationService.create(request));
     }

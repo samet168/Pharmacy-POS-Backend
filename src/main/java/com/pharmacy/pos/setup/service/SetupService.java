@@ -19,6 +19,7 @@ import com.pharmacy.pos.iam.repository.UserBranchRepository;
 import com.pharmacy.pos.iam.repository.UserRepository;
 import com.pharmacy.pos.security.JwtService;
 import com.pharmacy.pos.setup.dto.BootstrapRequest;
+import com.pharmacy.pos.setup.dto.CreateAdminRequest;
 import com.pharmacy.pos.tenant.entity.Organization;
 import com.pharmacy.pos.tenant.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
@@ -283,5 +284,71 @@ public class SetupService {
 
         return String.format("Permissions fixed successfully for all roles. Created %d new permissions, assigned %d permissions to roles. Total: %d permissions.", 
             counters[0], counters[1], permissionCodes.length);
+    }
+
+    @Transactional
+    public LoginResponse createAdmin(CreateAdminRequest request) {
+        // Get the first organization
+        Organization organization = organizationRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("No organization found. Please run bootstrap first."));
+
+        // Get the first branch
+        Branch branch = branchRepository.findByOrganizationId(organization.getId(), org.springframework.data.domain.PageRequest.of(0, 1))
+                .getContent()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("No branch found. Please run bootstrap first."));
+
+        // Get the Owner role (full permissions)
+        Role ownerRole = roleRepository.findByNameAndSystemRole("Owner", true)
+                .orElseThrow(() -> new BusinessRuleException("Owner role not found. Please run bootstrap first."));
+
+        // Check if username already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new DuplicateResourceException("Username already exists");
+        }
+
+        // Create user
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setPinCode(request.getPinCode());
+        user.setPhone(request.getPhone());
+        user.setOrganization(organization);
+        user.setRole(ownerRole);
+        user.setActive(true);
+        user = userRepository.save(user);
+
+        // Create User-Branch association
+        UserBranch userBranch = new UserBranch();
+        userBranch.setUser(user);
+        userBranch.setBranch(branch);
+        userBranchRepository.save(userBranch);
+
+        // Generate JWT tokens
+        List<Long> branchIds = List.of(branch.getId());
+
+        String accessToken = jwtService.generateAccessToken(
+                user.getId(),
+                user.getOrganization().getId(),
+                user.getRole().getId(),
+                branchIds
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        log.info("Admin user created successfully: {}", user.getUsername());
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getUsername(),
+                user.getOrganization().getId(),
+                user.getRole().getId(),
+                user.getRole().getName()
+        );
     }
 }

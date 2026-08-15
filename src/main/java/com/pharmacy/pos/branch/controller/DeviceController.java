@@ -8,7 +8,7 @@ import com.pharmacy.pos.branch.service.DeviceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,13 +19,11 @@ public class DeviceController {
     private final DeviceService deviceService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('device.create')")
     public ApiResponse<DeviceResponse> create(@Valid @RequestBody DeviceRequest request) {
         return ApiResponse.success(deviceService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('device.update')")
     public ApiResponse<DeviceResponse> update(@PathVariable Long id, @Valid @RequestBody DeviceRequest request) {
         return ApiResponse.success(deviceService.update(id, request));
     }
@@ -36,7 +34,6 @@ public class DeviceController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('device.view')")
     public ApiResponse<DeviceResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(deviceService.getById(id));
     }
@@ -47,19 +44,16 @@ public class DeviceController {
     }
 
     @GetMapping("/branch/{branchId}")
-    @PreAuthorize("hasAuthority('device.view')")
     public ApiResponse<PageResponse<DeviceResponse>> getByBranch(@PathVariable Long branchId, Pageable pageable) {
         return ApiResponse.success(PageResponse.of(deviceService.getByBranch(branchId, pageable)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('device.view')")
     public ApiResponse<PageResponse<DeviceResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(deviceService.getAll(pageable)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('device.delete')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         deviceService.delete(id);
         return ApiResponse.success("Device deleted successfully", null);

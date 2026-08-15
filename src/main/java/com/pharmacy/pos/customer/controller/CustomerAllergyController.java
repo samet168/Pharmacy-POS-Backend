@@ -6,7 +6,7 @@ import com.pharmacy.pos.customer.dto.CustomerAllergyResponse;
 import com.pharmacy.pos.customer.service.CustomerAllergyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,31 +19,26 @@ public class CustomerAllergyController {
     private final CustomerAllergyService customerAllergyService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('customer.update')")
     public ApiResponse<CustomerAllergyResponse> create(@Valid @RequestBody CustomerAllergyRequest request) {
         return ApiResponse.success(customerAllergyService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('customer.update')")
     public ApiResponse<CustomerAllergyResponse> update(@PathVariable Long id, @Valid @RequestBody CustomerAllergyRequest request) {
         return ApiResponse.success(customerAllergyService.update(id, request));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('customer.view')")
     public ApiResponse<CustomerAllergyResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(customerAllergyService.getById(id));
     }
 
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAuthority('customer.view')")
     public ApiResponse<List<CustomerAllergyResponse>> getByCustomer(@PathVariable Long customerId) {
         return ApiResponse.success(customerAllergyService.getByCustomer(customerId));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('customer.update')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         customerAllergyService.delete(id);
         return ApiResponse.success("Customer allergy deleted successfully", null);

@@ -42,6 +42,14 @@ public class RoleController {
         return ApiResponse.success(PageResponse.of(roleService.getAll(pageable)));
     }
 
+    @GetMapping("/organization/{organizationId}")
+    @PreAuthorize("hasAuthority('role.view')")
+    public ApiResponse<PageResponse<RoleResponse>> getByOrganization(
+            @PathVariable Long organizationId,
+            Pageable pageable) {
+        return ApiResponse.success(PageResponse.of(roleService.getByOrganization(organizationId, pageable)));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('role.delete')")
     public ApiResponse<Void> delete(@PathVariable Long id) {

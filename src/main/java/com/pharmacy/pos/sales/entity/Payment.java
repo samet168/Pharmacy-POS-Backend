@@ -29,6 +29,9 @@ public class Payment extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amountPaid;
 
+    @Column(name = "amount", precision = 12, scale = 2)
+    private BigDecimal amount;
+
     @Column(length = 3)
     private String currency = "USD";
 

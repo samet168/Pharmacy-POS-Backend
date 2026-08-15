@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,4 +33,7 @@ public class ProductBatch extends TimestampEntity {
 
     @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
+
+    @OneToMany(mappedBy = "batch")
+    private Set<BranchInventory> branchInventories;
 }

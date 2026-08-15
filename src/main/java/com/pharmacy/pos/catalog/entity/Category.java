@@ -30,6 +30,12 @@ public class Category extends TimestampEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "name_kh")
+    private String nameKh;
+
+    @Column(name = "is_active")
+    private boolean active = true;
+
     @OneToMany(mappedBy = "parent")
     private Set<Category> children = new HashSet<>();
 

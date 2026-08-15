@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface ShiftRepository extends JpaRepository<Shift, Long> {
     Optional<Shift> findByUserIdAndStatus(Long userId, com.pharmacy.pos.common.enums.ShiftStatus status);
     Page<Shift> findByBranchIdOrderByOpenedAtDesc(Long branchId, Pageable pageable);
+    Page<Shift> findByUserIdOrderByOpenedAtDesc(Long userId, Pageable pageable);
 }

@@ -13,4 +13,6 @@ public interface DrugInteractionRepository extends JpaRepository<DrugInteraction
     
     @Query("SELECT di FROM DrugInteraction di WHERE di.ingredientA.id = :ingredientId OR di.ingredientB.id = :ingredientId")
     List<DrugInteraction> findByIngredientId(@Param("ingredientId") Long ingredientId);
+    
+    List<DrugInteraction> findByIngredientAIdOrIngredientBId(Long ingredientAId, Long ingredientBId);
 }

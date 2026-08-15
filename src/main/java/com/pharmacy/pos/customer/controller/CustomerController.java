@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,6 +75,16 @@ public class CustomerController {
     @PreAuthorize("hasAuthority('customer.view')")
     public ApiResponse<PageResponse<CustomerResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(customerService.getAll(pageable)));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('customer.view')")
+    @Operation(summary = "Search customers", description = "Search customers by name, phone, or email")
+    public ApiResponse<PageResponse<CustomerResponse>> search(
+            @Parameter(description = "Organization ID") @RequestParam Long organizationId,
+            @Parameter(description = "Search query") @RequestParam String query,
+            Pageable pageable) {
+        return ApiResponse.success(PageResponse.of(customerService.search(organizationId, query, pageable)));
     }
 
     @DeleteMapping("/{id}")

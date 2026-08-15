@@ -1,6 +1,8 @@
 package com.pharmacy.pos.iam.repository;
 
 import com.pharmacy.pos.iam.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Long> findBranchIdsByUserId(@Param("userId") Long userId);
 
     boolean existsByUsername(String username);
+
+    Page<User> findByOrganizationId(Long organizationId, Pageable pageable);
 }

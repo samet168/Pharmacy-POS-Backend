@@ -25,4 +25,7 @@ public interface BranchInventoryRepository extends JpaRepository<BranchInventory
     List<BranchInventory> findAvailableBatchesByBranchAndProduct(
             @Param("branchId") Long branchId,
             @Param("productId") Long productId);
+
+    @Query("SELECT bi FROM BranchInventory bi WHERE bi.branch.id = :branchId")
+    List<BranchInventory> findByBranchId(@Param("branchId") Long branchId);
 }

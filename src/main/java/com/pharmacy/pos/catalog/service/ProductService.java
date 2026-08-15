@@ -164,6 +164,18 @@ public class ProductService {
                 .map(productMapper::toResponse);
     }
 
+    public Page<ProductResponse> search(Long organizationId, String query, Long branchId, Pageable pageable) {
+        return productRepository.findByOrganizationIdAndBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
+                organizationId, query, query, pageable)
+                .map(productMapper::toResponse);
+    }
+
+    public ProductResponse getByBarcode(Long organizationId, String barcode) {
+        Product product = productRepository.findByOrganizationIdAndSku(organizationId, barcode)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with barcode/SKU: " + barcode));
+        return productMapper.toResponse(product);
+    }
+
     @Transactional
     public void delete(Long id) {
         Product product = productRepository.findById(id)

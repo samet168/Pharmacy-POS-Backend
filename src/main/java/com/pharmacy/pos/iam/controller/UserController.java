@@ -62,6 +62,14 @@ public class UserController {
         return ApiResponse.success(PageResponse.of(userService.getAll(pageable)));
     }
 
+    @GetMapping("/organization/{organizationId}")
+    @PreAuthorize("hasAuthority('user.view')")
+    public ApiResponse<PageResponse<UserResponse>> getByOrganization(
+            @PathVariable Long organizationId,
+            Pageable pageable) {
+        return ApiResponse.success(PageResponse.of(userService.getByOrganization(organizationId, pageable)));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('user.delete')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
