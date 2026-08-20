@@ -50,6 +50,17 @@ public class ProductBatchService {
         }
     }
 
+    public List<ProductBatchResponse> getBatchesByBranchId(Long branchId) {
+        try {
+            List<ProductBatch> batches = productBatchRepository.findByBranchId(branchId);
+            return batches.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
     public ProductBatchResponse createBatch(ProductBatchRequest request) {
         ProductBatch batch = productBatchMapper.toEntity(request);
         ProductBatch savedBatch = productBatchRepository.save(batch);
@@ -85,6 +96,14 @@ public class ProductBatchService {
             response.setProductId(batch.getProduct().getId());
             response.setProductName(batch.getProduct().getBrandName());
             response.setProductSku(batch.getProduct().getSku());
+        }
+        
+        // Calculate total quantity from all branch inventories
+        if (batch.getBranchInventories() != null) {
+            int totalQuantity = batch.getBranchInventories().stream()
+                    .mapToInt(bi -> bi.getQuantityInBaseUnit())
+                    .sum();
+            response.setQuantityRemaining(totalQuantity);
         }
         
         return response;

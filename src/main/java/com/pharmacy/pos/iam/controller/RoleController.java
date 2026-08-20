@@ -19,31 +19,31 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('role.create')")
+    @PreAuthorize("hasAuthority('role.create') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> create(@Valid @RequestBody RoleRequest request) {
         return ApiResponse.success(roleService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.update')")
+    @PreAuthorize("hasAuthority('role.update') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> update(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
         return ApiResponse.success(roleService.update(id, request));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.view')")
+    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(roleService.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('role.view')")
+    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<PageResponse<RoleResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(roleService.getAll(pageable)));
     }
 
     @GetMapping("/organization/{organizationId}")
-    @PreAuthorize("hasAuthority('role.view')")
+    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<PageResponse<RoleResponse>> getByOrganization(
             @PathVariable Long organizationId,
             Pageable pageable) {
@@ -51,7 +51,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.delete')")
+    @PreAuthorize("hasAuthority('role.delete') or hasAuthority('ADMIN')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         roleService.delete(id);
         return ApiResponse.success("Role deleted successfully", null);

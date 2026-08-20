@@ -22,7 +22,7 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/overview")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get dashboard overview", description = "Get overall dashboard statistics")
     public ApiResponse<Map<String, Object>> getOverview(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -31,7 +31,7 @@ public class DashboardController {
     }
 
     @GetMapping("/sales")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get sales data", description = "Get sales statistics and data")
     public ApiResponse<Map<String, Object>> getSales(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -40,7 +40,7 @@ public class DashboardController {
     }
 
     @GetMapping("/products")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get products data", description = "Get product statistics")
     public ApiResponse<Map<String, Object>> getProducts(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -49,7 +49,7 @@ public class DashboardController {
     }
 
     @GetMapping("/customers")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get customers data", description = "Get customer statistics")
     public ApiResponse<Map<String, Object>> getCustomers(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -58,7 +58,7 @@ public class DashboardController {
     }
 
     @GetMapping("/orders")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get orders data", description = "Get order statistics")
     public ApiResponse<Map<String, Object>> getOrders(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -67,14 +67,14 @@ public class DashboardController {
     }
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get low stock products", description = "Get products with low stock")
     public ApiResponse<Map<String, Object>> getLowStock() {
         return ApiResponse.success(dashboardService.getLowStock());
     }
 
     @GetMapping("/top-products")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get top selling products", description = "Get top selling products")
     public ApiResponse<Map<String, Object>> getTopProducts(
             @Parameter(description = "Limit") @RequestParam(required = false) Integer limit) {
@@ -82,7 +82,7 @@ public class DashboardController {
     }
 
     @GetMapping("/recent-orders")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get recent orders", description = "Get recent orders")
     public ApiResponse<Map<String, Object>> getRecentOrders(
             @Parameter(description = "Limit") @RequestParam(required = false) Integer limit) {
@@ -90,7 +90,7 @@ public class DashboardController {
     }
 
     @GetMapping("/branches")
-    @PreAuthorize("hasAuthority('report.view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('ADMIN')")
     @Operation(summary = "Get branch statistics", description = "Get statistics by branch")
     public ApiResponse<Map<String, Object>> getBranches() {
         return ApiResponse.success(dashboardService.getBranches());

@@ -29,7 +29,7 @@ public class OrderItem extends BaseEntity {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id", nullable = false)
+    @JoinColumn(name = "batch_id")
     private ProductBatch batch;
 
     @ManyToOne(fetch = FetchType.LAZY)

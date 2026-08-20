@@ -13,17 +13,47 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    Optional<Product> findByOrganizationIdAndSku(Long organizationId, String sku);
-    Page<Product> findByOrganizationId(Long organizationId, Pageable pageable);
-    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
-    Page<Product> findByDefaultSupplierId(Long supplierId, Pageable pageable);
-    
-    @Query("SELECT p FROM Product p WHERE p.organization.id = :organizationId AND p.active = true")
-    Page<Product> findActiveByOrganizationId(@Param("organizationId") Long organizationId, Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE p.organization.id = :organizationId")
-    List<Product> findByOrganizationId(@Param("organizationId") Long organizationId);
+    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId AND p.sku = :sku")
+    Optional<Product> findByOrganizationIdAndSku(
+            @Param("orgId") Long organizationId,
+            @Param("sku") String sku);
 
+    /** Paginated — used by ProductService.getByOrganization() */
+    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId")
+    Page<Product> findByOrganizationId(
+            @Param("orgId") Long organizationId,
+            Pageable pageable);
+
+    /** Non-paginated — used by ReportsService.getProductReport() */
+    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId")
+    List<Product> findByOrganizationId(@Param("orgId") Long organizationId);
+
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId")
+    Page<Product> findByCategoryId(
+            @Param("categoryId") Long categoryId,
+            Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.defaultSupplier.id = :supplierId")
+    Page<Product> findByDefaultSupplierId(
+            @Param("supplierId") Long supplierId,
+            Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId AND p.active = true")
+    Page<Product> findActiveByOrganizationId(
+            @Param("orgId") Long organizationId,
+            Pageable pageable);
+
+    /**
+     * Full-text search by brandName OR sku within an organization.
+     * Used by ProductService.search().
+     */
+    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId AND " +
+           "(LOWER(p.brandName) LIKE LOWER(CONCAT('%', :brand, '%')) OR " +
+           " LOWER(p.sku)       LIKE LOWER(CONCAT('%', :sku,   '%')))")
     Page<Product> findByOrganizationIdAndBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
-            Long organizationId, String brandName, String sku, Pageable pageable);
+            @Param("orgId")  Long organizationId,
+            @Param("brand")  String brandName,
+            @Param("sku")    String sku,
+            Pageable pageable);
 }

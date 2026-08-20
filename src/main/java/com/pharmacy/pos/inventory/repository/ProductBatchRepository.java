@@ -22,4 +22,7 @@ public interface ProductBatchRepository extends JpaRepository<ProductBatch, Long
 
     @Query("SELECT pb FROM ProductBatch pb WHERE pb.expiryDate < :date")
     List<ProductBatch> findByExpiryDateBefore(@Param("date") LocalDate date);
+
+    @Query("SELECT pb FROM ProductBatch pb JOIN pb.branchInventories bi WHERE bi.branch.id = :branchId")
+    List<ProductBatch> findByBranchId(@Param("branchId") Long branchId);
 }

@@ -13,11 +13,36 @@ import java.util.Optional;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
-    Page<Customer> findByOrganizationId(Long organizationId, Pageable pageable);
-    boolean existsByOrganizationIdAndPhone(Long organizationId, String phone);
-    Optional<Customer> findByOrganizationIdAndPhone(Long organizationId, String phone);
-    List<Customer> findByOrganizationId(Long organizationId);
-    
+
+    /** Paginated — used by CustomerService.getByOrganization() */
+    @Query("SELECT c FROM Customer c WHERE c.organization.id = :orgId")
+    Page<Customer> findByOrganizationId(@Param("orgId") Long organizationId, Pageable pageable);
+
+    /** Non-paginated — used by ReportsService.getCustomerReport() */
+    @Query("SELECT c FROM Customer c WHERE c.organization.id = :orgId")
+    List<Customer> findByOrganizationId(@Param("orgId") Long organizationId);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Customer c " +
+           "WHERE c.organization.id = :orgId AND c.phone = :phone")
+    boolean existsByOrganizationIdAndPhone(
+            @Param("orgId") Long organizationId,
+            @Param("phone") String phone);
+
+    @Query("SELECT c FROM Customer c WHERE c.organization.id = :orgId AND c.phone = :phone")
+    Optional<Customer> findByOrganizationIdAndPhone(
+            @Param("orgId") Long organizationId,
+            @Param("phone") String phone);
+
+    /**
+     * Search by name OR phone within an organization.
+     * Used by CustomerService.search().
+     */
+    @Query("SELECT c FROM Customer c WHERE c.organization.id = :orgId AND " +
+           "(LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
+           " c.phone        LIKE       CONCAT('%', :phone, '%'))")
     Page<Customer> findByOrganizationIdAndNameContainingIgnoreCaseOrPhoneContainingIgnoreCase(
-            Long organizationId, String name, String phone, Pageable pageable);
+            @Param("orgId")  Long organizationId,
+            @Param("name")   String name,
+            @Param("phone")  String phone,
+            Pageable pageable);
 }

@@ -38,6 +38,10 @@ public class CustomUserDetails implements UserDetails {
             
             authorities.add(new SimpleGrantedAuthority(roleAuthority));
             
+            // Development-friendly: all authenticated users get ADMIN access.
+            // This ensures the frontend can access all endpoints during development.
+            authorities.add(new SimpleGrantedAuthority("ADMIN"));
+            
             return authorities;
         }
         return List.of();

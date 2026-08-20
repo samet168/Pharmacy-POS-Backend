@@ -6,6 +6,8 @@ import com.pharmacy.pos.catalog.entity.ActiveIngredient;
 import com.pharmacy.pos.catalog.mapper.ActiveIngredientMapper;
 import com.pharmacy.pos.catalog.repository.ActiveIngredientRepository;
 import com.pharmacy.pos.common.exception.ResourceNotFoundException;
+import com.pharmacy.pos.tenant.entity.Organization;
+import com.pharmacy.pos.tenant.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class ActiveIngredientService {
 
     private final ActiveIngredientRepository activeIngredientRepository;
     private final ActiveIngredientMapper activeIngredientMapper;
+    private final OrganizationRepository organizationRepository;
 
     public List<ActiveIngredientResponse> getAll() {
         return activeIngredientRepository.findAll().stream()
@@ -41,6 +44,13 @@ public class ActiveIngredientService {
     @Transactional
     public ActiveIngredientResponse create(ActiveIngredientRequest request) {
         ActiveIngredient ingredient = activeIngredientMapper.toEntity(request);
+        
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + request.getOrganizationId()));
+            ingredient.setOrganization(organization);
+        }
+        
         ActiveIngredient saved = activeIngredientRepository.save(ingredient);
         return activeIngredientMapper.toResponse(saved);
     }
@@ -49,6 +59,12 @@ public class ActiveIngredientService {
     public ActiveIngredientResponse update(Long id, ActiveIngredientRequest request) {
         ActiveIngredient ingredient = activeIngredientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Active ingredient not found with id: " + id));
+
+        if (request.getOrganizationId() != null) {
+            Organization organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + request.getOrganizationId()));
+            ingredient.setOrganization(organization);
+        }
 
         activeIngredientMapper.updateEntityFromRequest(ingredient, request);
         ActiveIngredient updated = activeIngredientRepository.save(ingredient);

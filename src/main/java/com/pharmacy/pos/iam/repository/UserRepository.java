@@ -21,5 +21,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
-    Page<User> findByOrganizationId(Long organizationId, Pageable pageable);
+    // organization is @ManyToOne — must use JPQL traversal, not derived query
+    @Query("SELECT u FROM User u WHERE u.organization.id = :orgId")
+    Page<User> findByOrganizationId(@Param("orgId") Long organizationId, Pageable pageable);
+
+    // Used by AuthService pin-login — scan only within an organization for security
+    @Query("SELECT u FROM User u WHERE u.organization.id = :orgId AND u.pinCode IS NOT NULL AND u.active = true")
+    List<User> findActiveUsersWithPinByOrganizationId(@Param("orgId") Long organizationId);
 }

@@ -11,4 +11,6 @@ public class ActiveIngredientRequest {
     private String nameKh;
 
     private String description;
+
+    private Long organizationId;
 }

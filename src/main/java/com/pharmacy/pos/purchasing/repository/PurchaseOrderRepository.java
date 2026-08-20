@@ -14,13 +14,35 @@ import java.util.List;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
-    Page<PurchaseOrder> findByOrganizationId(Long organizationId, Pageable pageable);
-    Page<PurchaseOrder> findByBranchId(Long branchId, Pageable pageable);
-    Page<PurchaseOrder> findBySupplierId(Long supplierId, Pageable pageable);
-    Page<PurchaseOrder> findByOrganizationIdAndStatus(Long organizationId, PurchaseStatus status, Pageable pageable);
-    boolean existsByPoNumber(String poNumber);
-    List<PurchaseOrder> findByStatusAndOrganizationId(PurchaseStatus status, Long organizationId);
 
-    @Query("SELECT po FROM PurchaseOrder po WHERE po.organization.id = :organizationId AND po.createdAt BETWEEN :from AND :to")
-    List<PurchaseOrder> findByOrganizationIdAndCreatedAtBetween(@Param("organizationId") Long organizationId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    // organization, branch, supplier are all @ManyToOne
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.organization.id = :orgId")
+    Page<PurchaseOrder> findByOrganizationId(@Param("orgId") Long organizationId, Pageable pageable);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.branch.id = :branchId")
+    Page<PurchaseOrder> findByBranchId(@Param("branchId") Long branchId, Pageable pageable);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.supplier.id = :supplierId")
+    Page<PurchaseOrder> findBySupplierId(@Param("supplierId") Long supplierId, Pageable pageable);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.organization.id = :orgId AND po.status = :status")
+    Page<PurchaseOrder> findByOrganizationIdAndStatus(
+            @Param("orgId") Long organizationId,
+            @Param("status") PurchaseStatus status,
+            Pageable pageable);
+
+    // poNumber is a plain @Column — derived query is fine
+    boolean existsByPoNumber(String poNumber);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.status = :status AND po.organization.id = :orgId")
+    List<PurchaseOrder> findByStatusAndOrganizationId(
+            @Param("status") PurchaseStatus status,
+            @Param("orgId") Long organizationId);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.organization.id = :orgId " +
+           "AND po.createdAt BETWEEN :from AND :to")
+    List<PurchaseOrder> findByOrganizationIdAndCreatedAtBetween(
+            @Param("orgId") Long organizationId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
 }

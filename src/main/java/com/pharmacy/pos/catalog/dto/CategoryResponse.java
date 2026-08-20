@@ -5,9 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Fix: removed hand-written isActive()/setActive() methods that conflict
- * with the ones Lombok @Data generates for the "active" boolean field,
- * causing a compilation error ("duplicate method").
+ * Fix: removed hand-written isActive()/setActive() that conflict with the
+ * methods Lombok @Data auto-generates for the boolean "active" field —
+ * this caused a "duplicate method" compile error.
  */
 @Data
 public class CategoryResponse {
@@ -17,7 +17,7 @@ public class CategoryResponse {
     private String nameKh;
     private Long parentId;
     private String parentName;
-    private boolean active;    // Lombok generates isActive() / setActive() automatically
+    private boolean active;   // Lombok generates isActive() / setActive() correctly
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

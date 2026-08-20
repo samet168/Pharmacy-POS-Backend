@@ -15,6 +15,7 @@ public class OrderItemResponse {
     private Long id;
     private Long orderId;
     private Long productId;
+    private String productName;
     private Long batchId;
     private Long unitId;
     private Integer quantity;

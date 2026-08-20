@@ -1,5 +1,6 @@
 package com.pharmacy.pos.tenant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,10 @@ public class OrganizationResponse {
     private String address;
     private String logoUrl;
     private String baseCurrency;
-    private boolean isActive;
+
+    @JsonProperty("isActive")
+    private Boolean active;    // renamed from "isActive" to fix Lombok double-prefix getter bug
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

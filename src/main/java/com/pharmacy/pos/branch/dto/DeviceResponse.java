@@ -1,5 +1,6 @@
 package com.pharmacy.pos.branch.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,12 @@ public class DeviceResponse {
     private String deviceUuid;
     private String deviceName;
     private LocalDateTime lastSyncedAt;
-    private boolean isActive;
+
+    // Rename field from "isActive" to "active" to fix the Lombok double-prefix getter bug.
+    // @JsonProperty keeps the JSON wire name as "isActive" so clients are not affected.
+    @JsonProperty("isActive")
+    private Boolean active;
+
     private LocalDateTime registeredAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

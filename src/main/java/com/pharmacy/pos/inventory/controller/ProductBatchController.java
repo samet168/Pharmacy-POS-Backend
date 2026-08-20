@@ -39,6 +39,12 @@ public class ProductBatchController {
         return ApiResponse.success(productBatchService.getBatchesByProductId(productId));
     }
 
+    @GetMapping("/branch/{branchId}")
+    @Operation(summary = "Get batches by branch ID")
+    public ApiResponse<List<ProductBatchResponse>> getBatchesByBranchId(@PathVariable Long branchId) {
+        return ApiResponse.success(productBatchService.getBatchesByBranchId(branchId));
+    }
+
     @PostMapping
     @Operation(summary = "Create new product batch")
     public ApiResponse<ProductBatchResponse> createBatch(@Valid @RequestBody ProductBatchRequest request) {
