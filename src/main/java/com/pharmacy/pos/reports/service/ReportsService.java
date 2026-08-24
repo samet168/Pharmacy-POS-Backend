@@ -63,8 +63,8 @@ public class ReportsService {
         BigDecimal averageOrderValue = orders.isEmpty() ? BigDecimal.ZERO :
                 totalSales.divide(BigDecimal.valueOf(orders.size()), 2, RoundingMode.HALF_UP);
 
-        List<Payment> payments = paymentRepository.findByOrderIdIn(
-                orders.stream().map(Order::getId).collect(Collectors.toList()));
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+        List<Payment> payments = orderIds.isEmpty() ? new ArrayList<>() : paymentRepository.findByOrderIdIn(orderIds);
 
         Map<String, List<Payment>> paymentsByMethod = payments.stream()
                 .collect(Collectors.groupingBy(p -> p.getPaymentMethod().name()));
@@ -74,7 +74,8 @@ public class ReportsService {
                     String method = entry.getKey();
                     List<Payment> methodPayments = entry.getValue();
                     BigDecimal amount = methodPayments.stream()
-                            .map(Payment::getAmount)
+                            .map(Payment::getAmountPaid)
+                            .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     return SalesReportResponse.PaymentMethodBreakdown.builder()
                             .paymentMethod(method)
@@ -332,7 +333,7 @@ public class ReportsService {
 
     private List<SalesReportResponse.ProductSales> calculateTopProducts(List<Order> orders) {
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
-        List<OrderItem> orderItems = orderItemRepository.findByOrderIdIn(orderIds);
+        List<OrderItem> orderItems = orderIds.isEmpty() ? new ArrayList<>() : orderItemRepository.findByOrderIdIn(orderIds);
 
         Map<Long, List<OrderItem>> itemsByProduct = orderItems.stream()
                 .collect(Collectors.groupingBy(item -> item.getProduct().getId()));

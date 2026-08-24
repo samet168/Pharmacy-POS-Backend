@@ -27,7 +27,7 @@ jwt:
   refresh-token-expiry-days: 14
 
 server:
-  port: 8080
+  port: 8081
 
 springdoc:
   api-docs:

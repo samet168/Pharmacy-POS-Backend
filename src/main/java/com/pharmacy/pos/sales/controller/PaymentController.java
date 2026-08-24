@@ -60,6 +60,29 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success("Payments retrieved successfully", paymentMapper.toResponseList(payments)));
     }
 
+    @GetMapping("/organization/{organizationId}")
+    @PreAuthorize("hasAuthority('payment.view')")
+    @Operation(summary = "Get payments by organization", description = "Retrieve payments for a specific organization, optionally filtered by branch")
+    public ResponseEntity<ApiResponse<PageResponse<PaymentResponse>>> getByOrganization(
+            @PathVariable Long organizationId,
+            @RequestParam(required = false) Long branchId,
+            Pageable pageable) {
+        Page<Payment> payments = (branchId != null)
+                ? paymentRepository.findByOrderOrganizationIdAndOrderBranchId(organizationId, branchId, pageable)
+                : paymentRepository.findByOrderOrganizationId(organizationId, pageable);
+        PageResponse<PaymentResponse> response = new PageResponse<>(
+                payments.map(paymentMapper::toResponse).getContent(),
+                payments.getNumber(),
+                payments.getTotalPages(),
+                payments.getTotalElements(),
+                payments.getSize(),
+                payments.isFirst(),
+                payments.isLast(),
+                payments.isEmpty()
+        );
+        return ResponseEntity.ok(ApiResponse.success("Payments retrieved successfully", response));
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('payment.view')")
     @Operation(summary = "Get all payments", description = "Retrieve all payments with optional filters")

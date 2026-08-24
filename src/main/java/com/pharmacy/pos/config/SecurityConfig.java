@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/setup/**", "/api/v1/organizations", "/api/v1/roles", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/setup/**", "/api/v1/organizations/**", "/api/v1/subscription-plans/**", "/api/v1/branches/**", "/api/v1/dashboard/**", "/api/v1/roles/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -2,6 +2,7 @@ package com.pharmacy.pos.tenant.controller;
 
 import com.pharmacy.pos.common.ApiResponse;
 import com.pharmacy.pos.common.PageResponse;
+import com.pharmacy.pos.tenant.dto.SubscriptionCheckoutRequest;
 import com.pharmacy.pos.tenant.dto.SubscriptionPlanRequest;
 import com.pharmacy.pos.tenant.dto.SubscriptionPlanResponse;
 import com.pharmacy.pos.tenant.service.SubscriptionPlanService;
@@ -17,6 +18,11 @@ import org.springframework.web.bind.annotation.*;
 public class SubscriptionPlanController {
 
     private final SubscriptionPlanService subscriptionPlanService;
+
+    @PostMapping("/checkout")
+    public ApiResponse<SubscriptionPlanResponse> checkout(@Valid @RequestBody SubscriptionCheckoutRequest request) {
+        return ApiResponse.success(subscriptionPlanService.checkout(request));
+    }
 
     @PostMapping
     public ApiResponse<SubscriptionPlanResponse> create(@Valid @RequestBody SubscriptionPlanRequest request) {
@@ -41,6 +47,11 @@ public class SubscriptionPlanController {
     @GetMapping
     public ApiResponse<PageResponse<SubscriptionPlanResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(subscriptionPlanService.getAll(pageable)));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ApiResponse<SubscriptionPlanResponse> cancel(@PathVariable Long id) {
+        return ApiResponse.success("Subscription cancelled successfully", subscriptionPlanService.cancel(id));
     }
 
     @DeleteMapping("/{id}")
