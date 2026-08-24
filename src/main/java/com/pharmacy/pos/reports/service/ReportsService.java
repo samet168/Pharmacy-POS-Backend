@@ -25,6 +25,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,6 +127,18 @@ public class ReportsService {
         long nearExpiryCount = expiringBatches.size();
         long expiredCount = productBatchRepository.findByExpiryDateBefore(today).size();
 
+        // Date range for filtering order-based stats (default: last 30 days)
+        LocalDateTime startDate = from != null ? from.atStartOfDay() : LocalDate.now().minusDays(30).atStartOfDay();
+        LocalDateTime endDate = to != null ? to.atTime(LocalTime.MAX) : LocalDateTime.now();
+
+        // Fetch orders to compute top-selling products
+        List<Order> orders = orderRepository.findByOrganizationIdAndCreatedAtBetween(organizationId, startDate, endDate);
+        if (branchId != null) {
+            orders = orders.stream()
+                    .filter(order -> order.getBranch() != null && order.getBranch().getId().equals(branchId))
+                    .collect(Collectors.toList());
+        }
+
         return ProductReportResponse.builder()
                 .totalProducts((long) products.size())
                 .activeProducts(activeProducts)
@@ -134,11 +147,91 @@ public class ReportsService {
                 .outOfStockProducts(0L) // Calculate from inventory
                 .nearExpiryProducts(nearExpiryCount)
                 .expiredProducts(expiredCount)
-                .topSellingProducts(new ArrayList<>()) // Populate from order items
-                .lowStockProductsList(new ArrayList<>()) // Populate from inventory
-                .expiringProductsList(new ArrayList<>()) // Populate from batches
+                .topSellingProducts(calculateTopSellingProducts(orders))
+                .lowStockProductsList(calculateLowStockProducts(inventories))
+                .expiringProductsList(calculateExpiringProducts(expiringBatches))
                 .build();
     }
+
+    private List<ProductReportResponse.TopSellingProduct> calculateTopSellingProducts(List<Order> orders) {
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+        List<OrderItem> orderItems = orderIds.isEmpty() ? new ArrayList<>() : orderItemRepository.findByOrderIdIn(orderIds);
+
+        Map<Long, List<OrderItem>> itemsByProduct = orderItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getProduct().getId()));
+
+        return itemsByProduct.entrySet().stream()
+                .map(entry -> {
+                    Long productId = entry.getKey();
+                    List<OrderItem> productItems = entry.getValue();
+                    long quantitySold = productItems.stream().mapToLong(item -> (long) item.getQuantity()).sum();
+                    BigDecimal revenue = productItems.stream()
+                            .map(OrderItem::getSubtotal)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal cost = productItems.stream()
+                            .map(item -> {
+                                BigDecimal unitCost = (item.getUnit() != null && item.getUnit().getCostPrice() != null)
+                                        ? item.getUnit().getCostPrice()
+                                        : BigDecimal.ZERO;
+                                return unitCost.multiply(BigDecimal.valueOf(item.getQuantity()));
+                            })
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal profit = revenue.subtract(cost);
+                    Product product = productItems.get(0).getProduct();
+                    return ProductReportResponse.TopSellingProduct.builder()
+                            .productId(productId)
+                            .productName(product.getBrandName())
+                            .sku(product.getSku())
+                            .quantitySold(quantitySold)
+                            .revenue(revenue.setScale(2, RoundingMode.HALF_UP))
+                            .profit(profit.setScale(2, RoundingMode.HALF_UP))
+                            .build();
+                })
+                .sorted(Comparator.comparing(ProductReportResponse.TopSellingProduct::getRevenue).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+    }
+
+    private List<ProductReportResponse.LowStockProduct> calculateLowStockProducts(List<BranchInventory> inventories) {
+        return inventories.stream()
+                .filter(inv -> inv.getQuantityInBaseUnit() <= inv.getBatch().getProduct().getMinStockAlert())
+                .map(inv -> {
+                    Product product = inv.getBatch().getProduct();
+                    return ProductReportResponse.LowStockProduct.builder()
+                            .productId(product.getId())
+                            .productName(product.getBrandName())
+                            .sku(product.getSku())
+                            .currentStock(inv.getQuantityInBaseUnit())
+                            .minimumStock(product.getMinStockAlert())
+                            .reorderLevel(product.getMinStockAlert())
+                            .build();
+                })
+                .limit(20)
+                .collect(Collectors.toList());
+    }
+
+    private List<ProductReportResponse.ExpiringProduct> calculateExpiringProducts(List<ProductBatch> batches) {
+        LocalDate today = LocalDate.now();
+        return batches.stream()
+                .map(batch -> {
+                    Product product = batch.getProduct();
+                    int daysUntilExpiry = batch.getExpiryDate() != null
+                            ? (int) ChronoUnit.DAYS.between(today, batch.getExpiryDate())
+                            : 0;
+                    // quantity intentionally left null/0 to avoid touching the lazy branchInventories collection
+                    return ProductReportResponse.ExpiringProduct.builder()
+                            .productId(product.getId())
+                            .productName(product.getBrandName())
+                            .batchNumber(batch.getBatchNumber())
+                            .expiryDate(batch.getExpiryDate() != null ? batch.getExpiryDate().toString() : null)
+                            .daysUntilExpiry(daysUntilExpiry)
+                            .build();
+                })
+                .limit(20)
+                .collect(Collectors.toList());
+    }
+
 
     public CustomerReportResponse getCustomerReport(Long organizationId, Long branchId, LocalDate from, LocalDate to) {
         LocalDateTime startDate = from != null ? from.atStartOfDay() : LocalDate.now().minusDays(30).atStartOfDay();
