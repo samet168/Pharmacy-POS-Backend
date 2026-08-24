@@ -57,6 +57,7 @@ public class ReportsService {
 
         BigDecimal totalSales = orders.stream()
                 .map(Order::getGrandTotal)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalRevenue = totalSales; // Simplified - in real implementation, calculate revenue after discounts
@@ -177,6 +178,7 @@ public class ReportsService {
 
         BigDecimal totalValue = purchaseOrders.stream()
                 .map(PurchaseOrder::getTotalAmount)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long pendingCount = purchaseOrders.stream()
@@ -261,6 +263,7 @@ public class ReportsService {
                     List<Order> userOrders = entry.getValue();
                     BigDecimal totalSales = userOrders.stream()
                             .map(Order::getGrandTotal)
+                            .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     BigDecimal avgOrderValue = userOrders.isEmpty() ? BigDecimal.ZERO :
                             totalSales.divide(BigDecimal.valueOf(userOrders.size()), 2, RoundingMode.HALF_UP);
@@ -293,6 +296,7 @@ public class ReportsService {
                     List<Order> dayOrders = entry.getValue();
                     BigDecimal revenue = dayOrders.stream()
                             .map(Order::getGrandTotal)
+                            .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     return SalesReportResponse.DailySales.builder()
                             .date(date.toString())
@@ -320,6 +324,7 @@ public class ReportsService {
                     List<Order> branchOrders = entry.getValue();
                     BigDecimal revenue = branchOrders.stream()
                             .map(Order::getGrandTotal)
+                            .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     return SalesReportResponse.BranchSales.builder()
                             .branchId(branchId)
@@ -347,6 +352,7 @@ public class ReportsService {
                             .sum();
                     BigDecimal revenue = productItems.stream()
                             .map(OrderItem::getSubtotal)
+                            .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     return SalesReportResponse.ProductSales.builder()
                             .productId(productId)

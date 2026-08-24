@@ -75,13 +75,13 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-The application will start on port 8080.
+The application will start on port 8081.
 
 ## API Documentation
 
-Swagger UI is available at: `http://localhost:8080/swagger-ui.html`
+Swagger UI is available at: `http://localhost:8081/swagger-ui.html`
 
-OpenAPI spec at: `http://localhost:8080/v3/api-docs`
+OpenAPI spec at: `http://localhost:8081/v3/api-docs`
 
 ## Authentication
 
