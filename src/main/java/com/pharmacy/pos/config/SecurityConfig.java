@@ -44,11 +44,27 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**", "/api/v1/setup/**", "/api/v1/organizations/**", "/api/v1/subscription-plans/**", "/api/v1/branches/**", "/api/v1/dashboard/**", "/api/v1/roles/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Returns a proper HTTP 401 (instead of the default 403) when a request has no
+     * valid/expired JWT. This lets the frontend's axios interceptor detect the
+     * 401 and transparently refresh the access token.
+     */
+    @Bean
+    public org.springframework.security.web.AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(
+                    "{\"success\":false,\"message\":\"Unauthorized or access token expired\"}");
+        };
     }
 
     @Bean

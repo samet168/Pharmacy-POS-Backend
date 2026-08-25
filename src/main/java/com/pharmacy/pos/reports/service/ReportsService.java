@@ -300,7 +300,7 @@ public class ReportsService {
     public InventoryReportResponse getInventoryReport(Long organizationId, Long branchId) {
         List<BranchInventory> inventories = branchId != null ?
                 branchInventoryRepository.findByBranchId(branchId) :
-                new ArrayList<>(); // Need organization filter
+                branchInventoryRepository.findByBranchOrganizationId(organizationId);
 
         BigDecimal totalValue = BigDecimal.ZERO;
         long totalQuantity = 0;
@@ -319,6 +319,34 @@ public class ReportsService {
             }
         }
 
+        // Calculate branch stocks
+        Map<Long, List<BranchInventory>> byBranch = inventories.stream()
+                .filter(inv -> inv.getBranch() != null)
+                .collect(Collectors.groupingBy(inv -> inv.getBranch().getId()));
+
+        List<InventoryReportResponse.BranchStock> branchStocks = byBranch.entrySet().stream()
+                .map(entry -> {
+                    Long bId = entry.getKey();
+                    List<BranchInventory> branchInvs = entry.getValue();
+                    String branchName = branchInvs.get(0).getBranch().getName();
+                    long branchTotalQuantity = branchInvs.stream().mapToLong(BranchInventory::getQuantityInBaseUnit).sum();
+                    BigDecimal branchTotalValue = branchInvs.stream()
+                            .map(inv -> BigDecimal.valueOf(inv.getQuantityInBaseUnit()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    long branchLowStock = branchInvs.stream()
+                            .filter(inv -> inv.getQuantityInBaseUnit() <= inv.getBatch().getProduct().getMinStockAlert())
+                            .count();
+                    
+                    return InventoryReportResponse.BranchStock.builder()
+                            .branchId(bId)
+                            .branchName(branchName)
+                            .totalProducts((long) branchInvs.stream().map(inv -> inv.getBatch().getProduct().getId()).distinct().count())
+                            .stockValue(branchTotalValue)
+                            .lowStockCount(branchLowStock)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         return InventoryReportResponse.builder()
                 .totalStockValue(totalValue)
                 .totalStockQuantity(totalQuantity)
@@ -326,7 +354,7 @@ public class ReportsService {
                 .outOfStockCount(outOfStockCount)
                 .expiringCount(0L) // Calculate from batches
                 .expiredCount(0L) // Calculate from batches
-                .branchStocks(new ArrayList<>()) // Populate by branch
+                .branchStocks(branchStocks)
                 .categoryStocks(new ArrayList<>()) // Populate by category
                 .stockMovementSummary(new ArrayList<>()) // Populate from stock movements
                 .build();

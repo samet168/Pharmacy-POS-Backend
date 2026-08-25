@@ -28,4 +28,7 @@ public interface BranchInventoryRepository extends JpaRepository<BranchInventory
 
     @Query("SELECT bi FROM BranchInventory bi WHERE bi.branch.id = :branchId")
     List<BranchInventory> findByBranchId(@Param("branchId") Long branchId);
+
+    @Query("SELECT bi FROM BranchInventory bi WHERE bi.branch.organization.id = :organizationId")
+    List<BranchInventory> findByBranchOrganizationId(@Param("organizationId") Long organizationId);
 }
