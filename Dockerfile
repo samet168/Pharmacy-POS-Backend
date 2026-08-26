@@ -28,5 +28,5 @@ COPY --from=builder /app/target/*.jar app.jar
 ENV PORT=8081
 EXPOSE ${PORT}
 
-# Memory optimization for Render Free Tier (512MB RAM constraint)
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-Xmx384m", "-Xms128m", "-XX:+UseG1GC", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+# Render dynamic port binding with shell expansion
+ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xmx384m -Xms128m -XX:+UseG1GC -Dserver.port=${PORT:-8081} -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
