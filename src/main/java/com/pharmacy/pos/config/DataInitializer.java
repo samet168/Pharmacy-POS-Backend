@@ -139,7 +139,7 @@ public class DataInitializer implements CommandLineRunner {
             return u;
         });
 
-        rootUser.setPasswordHash(passwordEncoder.encode("123456"));
+        rootUser.setPasswordHash(passwordEncoder.encode("admin123"));
         rootUser.setName("System SuperAdmin (Root)");
         rootUser.setPhone("012888999");
         rootUser.setPinCode(passwordEncoder.encode("9999"));
@@ -147,6 +147,6 @@ public class DataInitializer implements CommandLineRunner {
         rootUser.setRole(superAdminRole);
         rootUser.setActive(true);
         userRepository.save(rootUser);
-        log.info("Initialized root master account: superadmin / 123456 with SUPERADMIN role");
+        log.info("Initialized root master account: superadmin / admin123 with SUPERADMIN role");
     }
 }
