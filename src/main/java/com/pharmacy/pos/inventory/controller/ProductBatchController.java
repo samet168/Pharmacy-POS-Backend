@@ -45,6 +45,33 @@ public class ProductBatchController {
         return ApiResponse.success(productBatchService.getBatchesByBranchId(branchId));
     }
 
+    @GetMapping("/branch/{branchId}/expiring")
+    @Operation(summary = "Get expiring batches by branch ID")
+    public ApiResponse<List<ProductBatchResponse>> getExpiringBatchesByBranch(
+            @PathVariable Long branchId,
+            @RequestParam(required = false, defaultValue = "30") int withinDays) {
+        return ApiResponse.success(productBatchService.getExpiringBatches(branchId, withinDays));
+    }
+
+    @GetMapping("/expiring")
+    @Operation(summary = "Get all expiring batches")
+    public ApiResponse<List<ProductBatchResponse>> getAllExpiringBatches(
+            @RequestParam(required = false, defaultValue = "30") int withinDays) {
+        return ApiResponse.success(productBatchService.getExpiringBatches(null, withinDays));
+    }
+
+    @GetMapping("/branch/{branchId}/expired")
+    @Operation(summary = "Get expired batches by branch ID")
+    public ApiResponse<List<ProductBatchResponse>> getExpiredBatchesByBranch(@PathVariable Long branchId) {
+        return ApiResponse.success(productBatchService.getExpiredBatches(branchId));
+    }
+
+    @GetMapping("/expired")
+    @Operation(summary = "Get all expired batches")
+    public ApiResponse<List<ProductBatchResponse>> getAllExpiredBatches() {
+        return ApiResponse.success(productBatchService.getExpiredBatches(null));
+    }
+
     @PostMapping
     @Operation(summary = "Create new product batch")
     public ApiResponse<ProductBatchResponse> createBatch(@Valid @RequestBody ProductBatchRequest request) {
