@@ -41,6 +41,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final OrganizationRepository organizationRepository;
+    private final RoleRepository roleRepository;
     private final BranchRepository branchRepository;
     private final com.pharmacy.pos.tenant.repository.SubscriptionPlanRepository subscriptionPlanRepository;
     private final AuditLogService auditLogService;

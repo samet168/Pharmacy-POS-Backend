@@ -110,4 +110,11 @@ public class AuditLogService {
             // Ignore failure so core transactions are never blocked
         }
     }
+
+    @Transactional
+    public void delete(Long id) {
+        AuditLog auditLog = auditLogRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Audit log not found with id: " + id));
+        auditLogRepository.delete(auditLog);
+    }
 }
