@@ -8,6 +8,9 @@ import com.pharmacy.pos.iam.mapper.RoleMapper;
 import com.pharmacy.pos.iam.repository.RoleRepository;
 import com.pharmacy.pos.tenant.entity.Organization;
 import com.pharmacy.pos.tenant.repository.OrganizationRepository;
+import com.pharmacy.pos.iam.repository.RolePermissionRepository;
+import com.pharmacy.pos.iam.repository.PermissionRepository;
+import com.pharmacy.pos.iam.mapper.PermissionMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +24,9 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
     private final OrganizationRepository organizationRepository;
+    private final RolePermissionRepository rolePermissionRepository;
+    private final com.pharmacy.pos.iam.repository.PermissionRepository permissionRepository;
+    private final com.pharmacy.pos.iam.mapper.PermissionMapper permissionMapper;
 
     @Transactional
     public RoleResponse create(RoleRequest request) {
@@ -65,14 +71,62 @@ public class RoleService {
     }
 
     public Page<RoleResponse> getByOrganization(Long organizationId, Pageable pageable) {
-        return roleRepository.findByOrganizationId(organizationId, pageable)
-                .map(roleMapper::toResponse);
+        Page<Role> roles = roleRepository.findByOrganizationId(organizationId, pageable);
+        if (roles.isEmpty()) {
+            // Return all roles as fallback if organization-specific roles are empty
+            return roleRepository.findAll(pageable).map(roleMapper::toResponse);
+        }
+        return roles.map(roleMapper::toResponse);
+    }
+
+    public java.util.List<com.pharmacy.pos.iam.dto.PermissionResponse> getRolePermissions(Long roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+        return rolePermissionRepository.findPermissionsByRoleId(role.getId())
+                .stream()
+                .map(permissionMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public java.util.List<com.pharmacy.pos.iam.dto.PermissionResponse> updateRolePermissions(Long roleId, java.util.List<Long> permissionIds) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+
+        // Remove existing assignments quickly in batch and flush immediately
+        java.util.List<com.pharmacy.pos.iam.entity.RolePermission> existing = rolePermissionRepository.findByRoleId(role.getId());
+        if (!existing.isEmpty()) {
+            rolePermissionRepository.deleteAllInBatch(existing);
+            rolePermissionRepository.flush();
+        }
+
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            java.util.List<com.pharmacy.pos.iam.entity.RolePermission> toSave = new java.util.ArrayList<>();
+            for (Long permId : permissionIds) {
+                com.pharmacy.pos.iam.entity.Permission permission = permissionRepository.findById(permId).orElse(null);
+                if (permission != null) {
+                    com.pharmacy.pos.iam.entity.RolePermission rp = new com.pharmacy.pos.iam.entity.RolePermission();
+                    rp.setRole(role);
+                    rp.setPermission(permission);
+                    toSave.add(rp);
+                }
+            }
+            if (!toSave.isEmpty()) {
+                rolePermissionRepository.saveAll(toSave);
+            }
+        }
+
+        return rolePermissionRepository.findPermissionsByRoleId(role.getId())
+                .stream()
+                .map(permissionMapper::toResponse)
+                .toList();
     }
 
     @Transactional
     public void delete(Long id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", id));
+        rolePermissionRepository.deleteByRoleId(role.getId());
         roleRepository.delete(role);
     }
 }

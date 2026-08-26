@@ -213,6 +213,15 @@ public class UserService {
     }
 
     @Transactional
+    public void resetPassword(Long id, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setActive(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void delete(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", id));

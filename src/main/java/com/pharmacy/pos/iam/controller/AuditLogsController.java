@@ -5,18 +5,21 @@ import com.pharmacy.pos.iam.dto.AuditLogRequest;
 import com.pharmacy.pos.iam.dto.AuditLogResponse;
 import com.pharmacy.pos.iam.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/audit-logs")
 @RequiredArgsConstructor
+@Tag(name = "Audit Logs", description = "Endpoints for managing and querying system audit logs")
 public class AuditLogsController {
 
     private final AuditLogService auditLogService;
@@ -84,8 +87,37 @@ public class AuditLogsController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all audit logs", description = "Retrieve all audit log entries")
-    public ApiResponse<List<AuditLogResponse>> getAll() {
+    @Operation(summary = "Get all audit logs with optional query params", description = "Retrieve all audit log entries with optional filters")
+    public ApiResponse<List<AuditLogResponse>> getAll(
+            @RequestParam(required = false) Long organizationId,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String entityType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        if (organizationId != null && from != null && to != null) {
+            LocalDateTime start = from.atStartOfDay();
+            LocalDateTime end = to.atTime(LocalTime.MAX);
+            return ApiResponse.success(auditLogService.getByOrganizationAndDateRange(organizationId, start, end));
+        }
+
+        if (organizationId != null) {
+            return ApiResponse.success(auditLogService.getByOrganization(organizationId));
+        }
+
+        if (userId != null) {
+            return ApiResponse.success(auditLogService.getByUser(userId));
+        }
+
+        if (action != null && !action.isBlank()) {
+            return ApiResponse.success(auditLogService.getByAction(action));
+        }
+
+        if (entityType != null && !entityType.isBlank()) {
+            return ApiResponse.success(auditLogService.getByEntityType(entityType));
+        }
+
         return ApiResponse.success(auditLogService.getAll());
     }
 

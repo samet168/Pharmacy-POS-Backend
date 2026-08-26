@@ -10,17 +10,17 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    List<AuditLog> findByOrganizationId(Long organizationId);
+    List<AuditLog> findByOrganizationIdOrderByCreatedAtDesc(Long organizationId);
 
-    List<AuditLog> findByUserId(Long userId);
+    List<AuditLog> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    List<AuditLog> findByAction(String action);
+    List<AuditLog> findByActionOrderByCreatedAtDesc(String action);
 
-    List<AuditLog> findByEntityType(String entityType);
+    List<AuditLog> findByEntityTypeOrderByCreatedAtDesc(String entityType);
 
-    List<AuditLog> findByOrganizationIdAndCreatedAtBetween(
+    List<AuditLog> findByOrganizationIdAndCreatedAtBetweenOrderByCreatedAtDesc(
             Long organizationId, LocalDateTime startDate, LocalDateTime endDate);
 
-    List<AuditLog> findByUserIdAndCreatedAtBetween(
+    List<AuditLog> findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(
             Long userId, LocalDateTime startDate, LocalDateTime endDate);
 }

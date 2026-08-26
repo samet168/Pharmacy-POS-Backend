@@ -28,7 +28,8 @@ public class CustomUserDetails implements UserDetails {
             List<Permission> permissions = rolePermissionRepository.findPermissionsByRoleId(user.getRole().getId());
             
             // Add role as authority (Spring Security expects ROLE_ prefix for hasRole())
-            String roleAuthority = "ROLE_" + user.getRole().getName().toUpperCase();
+            String roleUpper = user.getRole().getName().toUpperCase();
+            String roleAuthority = "ROLE_" + roleUpper;
             
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
             
@@ -38,9 +39,16 @@ public class CustomUserDetails implements UserDetails {
             
             authorities.add(new SimpleGrantedAuthority(roleAuthority));
             
-            // Development-friendly: all authenticated users get ADMIN access.
-            // This ensures the frontend can access all endpoints during development.
-            authorities.add(new SimpleGrantedAuthority("ADMIN"));
+            // Grant supreme root access to SUPERADMIN, and operational admin access to other admin roles
+            if (roleUpper.contains("SUPERADMIN")) {
+                authorities.add(new SimpleGrantedAuthority("SUPERADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            } else if (roleUpper.contains("ADMIN") || roleUpper.contains("OWNER")) {
+                authorities.add(new SimpleGrantedAuthority("ADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }
             
             return authorities;
         }

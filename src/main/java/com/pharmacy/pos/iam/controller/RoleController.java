@@ -19,39 +19,46 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('role.create') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> create(@Valid @RequestBody RoleRequest request) {
         return ApiResponse.success(roleService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.update') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> update(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
         return ApiResponse.success(roleService.update(id, request));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<RoleResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(roleService.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<PageResponse<RoleResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(roleService.getAll(pageable)));
     }
 
     @GetMapping("/organization/{organizationId}")
-    @PreAuthorize("hasAuthority('role.view') or hasAuthority('ADMIN')")
     public ApiResponse<PageResponse<RoleResponse>> getByOrganization(
             @PathVariable Long organizationId,
             Pageable pageable) {
         return ApiResponse.success(PageResponse.of(roleService.getByOrganization(organizationId, pageable)));
     }
 
+    @GetMapping("/{id}/permissions")
+    public ApiResponse<java.util.List<com.pharmacy.pos.iam.dto.PermissionResponse>> getRolePermissions(@PathVariable Long id) {
+        return ApiResponse.success(roleService.getRolePermissions(id));
+    }
+
+    @PutMapping("/{id}/permissions")
+    public ApiResponse<java.util.List<com.pharmacy.pos.iam.dto.PermissionResponse>> updateRolePermissions(
+            @PathVariable Long id,
+            @RequestBody com.pharmacy.pos.iam.dto.RolePermissionUpdateRequest request) {
+        java.util.List<Long> permissionIds = request != null && request.getPermissionIds() != null ? request.getPermissionIds() : java.util.Collections.emptyList();
+        return ApiResponse.success("Role permissions updated successfully", roleService.updateRolePermissions(id, permissionIds));
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('role.delete') or hasAuthority('ADMIN')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         roleService.delete(id);
         return ApiResponse.success("Role deleted successfully", null);

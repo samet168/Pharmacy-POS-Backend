@@ -23,44 +23,48 @@ public class AuditLogService {
 
     public List<AuditLogResponse> getAll() {
         return auditLogRepository.findAll().stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null || b.getCreatedAt() == null) return 0;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByOrganization(Long organizationId) {
-        return auditLogRepository.findByOrganizationId(organizationId).stream()
+        return auditLogRepository.findByOrganizationIdOrderByCreatedAtDesc(organizationId).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByUser(Long userId) {
-        return auditLogRepository.findByUserId(userId).stream()
+        return auditLogRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByAction(String action) {
-        return auditLogRepository.findByAction(action).stream()
+        return auditLogRepository.findByActionOrderByCreatedAtDesc(action).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByEntityType(String entityType) {
-        return auditLogRepository.findByEntityType(entityType).stream()
+        return auditLogRepository.findByEntityTypeOrderByCreatedAtDesc(entityType).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByOrganizationAndDateRange(
             Long organizationId, LocalDateTime startDate, LocalDateTime endDate) {
-        return auditLogRepository.findByOrganizationIdAndCreatedAtBetween(organizationId, startDate, endDate).stream()
+        return auditLogRepository.findByOrganizationIdAndCreatedAtBetweenOrderByCreatedAtDesc(organizationId, startDate, endDate).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AuditLogResponse> getByUserAndDateRange(
             Long userId, LocalDateTime startDate, LocalDateTime endDate) {
-        return auditLogRepository.findByUserIdAndCreatedAtBetween(userId, startDate, endDate).stream()
+        return auditLogRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(userId, startDate, endDate).stream()
                 .map(auditLogMapper::toResponse)
                 .collect(Collectors.toList());
     }

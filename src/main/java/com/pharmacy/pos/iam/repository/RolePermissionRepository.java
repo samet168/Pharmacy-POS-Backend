@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface RolePermissionRepository extends JpaRepository<RolePermission, Long> {
     Optional<RolePermission> findByRoleIdAndPermissionId(Long roleId, Long permissionId);
     boolean existsByRoleIdAndPermissionId(Long roleId, Long permissionId);
+    List<RolePermission> findByRoleId(Long roleId);
+    void deleteByRoleId(Long roleId);
     
     @Query("SELECT p FROM Permission p JOIN RolePermission rp ON p.id = rp.permission.id WHERE rp.role.id = :roleId")
     List<Permission> findPermissionsByRoleId(Long roleId);

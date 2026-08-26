@@ -8,9 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByName(String name);
     Optional<Role> findByNameAndSystemRole(String name, boolean systemRole);
-    Page<Role> findByOrganizationId(Long organizationId, Pageable pageable);
+    
+    @Query("SELECT r FROM Role r WHERE r.organization.id = :organizationId OR r.organization IS NULL OR r.systemRole = true")
+    Page<Role> findByOrganizationId(@Param("organizationId") Long organizationId, Pageable pageable);
 }
