@@ -288,32 +288,37 @@ public class AuthService {
         boolean isNew = (user == null);
 
         if (user == null) {
-            // Auto-provision Google User
-            Organization organization;
-            if (request.getOrganizationId() != null) {
-                organization = organizationRepository.findById(request.getOrganizationId())
-                        .orElse(organizationRepository.findAll().stream().findFirst().orElse(null));
-            } else {
-                organization = organizationRepository.findAll().stream().findFirst().orElse(null);
-            }
+            // Auto-provision brand new isolated Organization for new Google user
+            String displayName = (request.getName() != null && !request.getName().isBlank()) 
+                    ? request.getName() 
+                    : email.split("@")[0];
 
-            if (organization == null) {
-                organization = new Organization();
-                organization.setName("Google Pharmacy Hub");
-                organization.setSlug("google-pharmacy-" + System.currentTimeMillis());
-                organization.setActive(true);
-                organization = organizationRepository.save(organization);
-            }
+            Organization organization = new Organization();
+            organization.setName(displayName + " Pharmacy");
+            organization.setSlug("pharmacy-" + System.currentTimeMillis());
+            organization.setContactEmail(email);
+            organization.setBaseCurrency("USD");
+            organization.setActive(true);
+            organization = organizationRepository.save(organization);
 
-            // Find role: Pharmacist or Manager or Admin or first role
-            Role role = roleRepository.findByName("PHARMACIST")
+            // Create dedicated primary branch for this new organization
+            Branch branch = new Branch();
+            branch.setOrganization(organization);
+            branch.setCode("MB-01");
+            branch.setName("Main Store Branch");
+            branch.setActive(true);
+            branch = branchRepository.save(branch);
+
+            // Find Super/Admin/Owner role
+            Role role = roleRepository.findByName("Owner")
                     .or(() -> roleRepository.findByName("ADMIN"))
+                    .or(() -> roleRepository.findByName("PHARMACIST"))
                     .or(() -> roleRepository.findAll().stream().findFirst())
                     .orElse(null);
 
             if (role == null) {
                 role = new Role();
-                role.setName("PHARMACIST");
+                role.setName("Owner");
                 role.setSystemRole(false);
                 role.setOrganization(organization);
                 role = roleRepository.save(role);
@@ -321,7 +326,7 @@ public class AuthService {
 
             user = new User();
             user.setUsername(email);
-            user.setName(request.getName() != null && !request.getName().isBlank() ? request.getName() : email.split("@")[0]);
+            user.setName(displayName);
             user.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
             user.setImageUrl(request.getPicture());
             user.setOrganization(organization);
@@ -329,38 +334,28 @@ public class AuthService {
             user.setActive(true);
             user = userRepository.save(user);
 
-            // Assign default branch if available
-            Branch branch = branchRepository.findAll().stream().findFirst().orElse(null);
-            if (branch != null) {
-                UserBranch userBranch = new UserBranch();
-                userBranch.setUser(user);
-                userBranch.setBranch(branch);
-                userBranchRepository.save(userBranch);
+            // Attach user to their own branch only
+            UserBranch userBranch = new UserBranch();
+            userBranch.setUser(user);
+            userBranch.setBranch(branch);
+            userBranchRepository.save(userBranch);
+
+            // Check if user specified a plan or needs to choose one
+            boolean planSpecified = (request.getPlanName() != null && !request.getPlanName().isBlank());
+            if (planSpecified) {
+                com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
+                subPlan.setOrganization(organization);
+                subPlan.setPlanName(request.getPlanName());
+                subPlan.setMaxBranches(10);
+                subPlan.setMaxUsers(50);
+                subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
+                subPlan.setStartsAt(java.time.LocalDate.now());
+                subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
+                subscriptionPlanRepository.save(subPlan);
+                log.info("Auto-provisioned active SubscriptionPlan for new Google organization {}", organization.getId());
             }
 
-            // Ensure Organization has an active Subscription Plan
-            try {
-                java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> orgPlans = 
-                    subscriptionPlanRepository.findByOrganizationId(organization.getId());
-                if (orgPlans.isEmpty()) {
-                    com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
-                    subPlan.setOrganization(organization);
-                    subPlan.setPlanName(request.getPlanName() != null && !request.getPlanName().isBlank() 
-                        ? request.getPlanName() 
-                        : "Professional Cloud Plan");
-                    subPlan.setMaxBranches(10);
-                    subPlan.setMaxUsers(50);
-                    subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
-                    subPlan.setStartsAt(java.time.LocalDate.now());
-                    subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
-                    subscriptionPlanRepository.save(subPlan);
-                    log.info("Auto-provisioned active SubscriptionPlan for Google user organization {}", organization.getId());
-                }
-            } catch (Exception ex) {
-                log.warn("Subscription plan auto-provisioning notice: {}", ex.getMessage());
-            }
-
-            log.info("Auto-registered new Google user: {} with role: {}", email, role.getName());
+            log.info("Auto-registered new isolated Google user: {} with new Organization ID: {}", email, organization.getId());
         } else {
             if (!user.isActive()) {
                 user.setActive(true);
@@ -373,28 +368,7 @@ public class AuthService {
             }
             userRepository.save(user);
 
-            // Ensure existing user's organization has an active Subscription Plan
-            if (user.getOrganization() != null) {
-                try {
-                    java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> orgPlans = 
-                        subscriptionPlanRepository.findByOrganizationId(user.getOrganization().getId());
-                    if (orgPlans.isEmpty()) {
-                        com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
-                        subPlan.setOrganization(user.getOrganization());
-                        subPlan.setPlanName("Professional Cloud Plan");
-                        subPlan.setMaxBranches(10);
-                        subPlan.setMaxUsers(50);
-                        subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
-                        subPlan.setStartsAt(java.time.LocalDate.now());
-                        subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
-                        subscriptionPlanRepository.save(subPlan);
-                    }
-                } catch (Exception ex) {
-                    log.warn("Subscription check notice: {}", ex.getMessage());
-                }
-            }
-
-            log.info("Google login for existing user: {}", email);
+            log.info("Google login for existing user: {} in Organization ID: {}", email, user.getOrganization() != null ? user.getOrganization().getId() : null);
         }
 
         List<Long> branchIds = userBranchRepository.findBranchIdsByUserId(user.getId());
