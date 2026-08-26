@@ -21,4 +21,5 @@ public class GoogleLoginRequest {
     private String idToken;
     private Long organizationId;
     private Long branchId;
+    private String planName;
 }

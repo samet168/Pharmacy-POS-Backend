@@ -43,6 +43,7 @@ public class AuthService {
     private final OrganizationRepository organizationRepository;
     private final RoleRepository roleRepository;
     private final BranchRepository branchRepository;
+    private final com.pharmacy.pos.tenant.repository.SubscriptionPlanRepository subscriptionPlanRepository;
 
     @Transactional
     public LoginResponse register(RegisterRequest request) {
@@ -335,6 +336,29 @@ public class AuthService {
                 userBranch.setBranch(branch);
                 userBranchRepository.save(userBranch);
             }
+
+            // Ensure Organization has an active Subscription Plan
+            try {
+                java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> orgPlans = 
+                    subscriptionPlanRepository.findByOrganizationId(organization.getId());
+                if (orgPlans.isEmpty()) {
+                    com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
+                    subPlan.setOrganization(organization);
+                    subPlan.setPlanName(request.getPlanName() != null && !request.getPlanName().isBlank() 
+                        ? request.getPlanName() 
+                        : "Professional Cloud Plan");
+                    subPlan.setMaxBranches(10);
+                    subPlan.setMaxUsers(50);
+                    subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
+                    subPlan.setStartsAt(java.time.LocalDate.now());
+                    subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
+                    subscriptionPlanRepository.save(subPlan);
+                    log.info("Auto-provisioned active SubscriptionPlan for Google user organization {}", organization.getId());
+                }
+            } catch (Exception ex) {
+                log.warn("Subscription plan auto-provisioning notice: {}", ex.getMessage());
+            }
+
             log.info("Auto-registered new Google user: {} with role: {}", email, role.getName());
         } else {
             if (!user.isActive()) {
@@ -347,6 +371,28 @@ public class AuthService {
                 user.setName(request.getName());
             }
             userRepository.save(user);
+
+            // Ensure existing user's organization has an active Subscription Plan
+            if (user.getOrganization() != null) {
+                try {
+                    java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> orgPlans = 
+                        subscriptionPlanRepository.findByOrganizationId(user.getOrganization().getId());
+                    if (orgPlans.isEmpty()) {
+                        com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
+                        subPlan.setOrganization(user.getOrganization());
+                        subPlan.setPlanName("Professional Cloud Plan");
+                        subPlan.setMaxBranches(10);
+                        subPlan.setMaxUsers(50);
+                        subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
+                        subPlan.setStartsAt(java.time.LocalDate.now());
+                        subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
+                        subscriptionPlanRepository.save(subPlan);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Subscription check notice: {}", ex.getMessage());
+                }
+            }
+
             log.info("Google login for existing user: {}", email);
         }
 
