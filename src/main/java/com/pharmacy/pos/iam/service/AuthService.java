@@ -41,9 +41,9 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final OrganizationRepository organizationRepository;
-    private final RoleRepository roleRepository;
     private final BranchRepository branchRepository;
     private final com.pharmacy.pos.tenant.repository.SubscriptionPlanRepository subscriptionPlanRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public LoginResponse register(RegisterRequest request) {
@@ -162,6 +162,16 @@ public class AuthService {
         );
 
         String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        auditLogService.recordLog(
+                user.getOrganization().getId(),
+                user.getId(),
+                user.getUsername(),
+                "USER_LOGIN",
+                "UserSession",
+                user.getId(),
+                "User " + user.getUsername() + " successfully signed in"
+        );
 
         return new LoginResponse(
                 accessToken,

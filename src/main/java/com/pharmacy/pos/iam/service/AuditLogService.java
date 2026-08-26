@@ -93,9 +93,21 @@ public class AuditLogService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        AuditLog auditLog = auditLogRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Audit log not found with id: " + id));
-        auditLogRepository.delete(auditLog);
+    public void recordLog(Long organizationId, Long userId, String username, String action, String entityType, Long entityId, String description) {
+        try {
+            AuditLog log = new AuditLog();
+            log.setOrganizationId(organizationId != null ? organizationId : 1L);
+            log.setUserId(userId);
+            log.setUsername(username);
+            log.setAction(action);
+            log.setEntityType(entityType);
+            log.setEntityId(entityId);
+            log.setDescription(description);
+            log.setStatusCode(200);
+            log.setCreatedAt(LocalDateTime.now());
+            auditLogRepository.save(log);
+        } catch (Exception e) {
+            // Ignore failure so core transactions are never blocked
+        }
     }
 }
