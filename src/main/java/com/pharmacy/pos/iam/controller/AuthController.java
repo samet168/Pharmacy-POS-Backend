@@ -47,6 +47,11 @@ public class AuthController {
         return ApiResponse.success(authService.pinLogin(request));
     }
 
+    @PostMapping("/google")
+    public ApiResponse<LoginResponse> googleLogin(@Valid @RequestBody com.pharmacy.pos.iam.dto.GoogleLoginRequest request) {
+        return ApiResponse.success(authService.loginWithGoogle(request));
+    }
+
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> getCurrentUser(Authentication authentication) {
         com.pharmacy.pos.security.CustomUserDetails userDetails = 

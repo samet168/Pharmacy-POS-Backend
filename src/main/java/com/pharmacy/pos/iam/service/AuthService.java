@@ -277,4 +277,98 @@ public class AuthService {
 
         log.info("Password changed successfully for user {}", userId);
     }
+
+    @Transactional
+    public LoginResponse loginWithGoogle(com.pharmacy.pos.iam.dto.GoogleLoginRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        
+        // Find existing user by username/email
+        User user = userRepository.findByUsername(email).orElse(null);
+
+        if (user == null) {
+            // Auto-provision Google User
+            Organization organization;
+            if (request.getOrganizationId() != null) {
+                organization = organizationRepository.findById(request.getOrganizationId())
+                        .orElse(organizationRepository.findAll().stream().findFirst().orElse(null));
+            } else {
+                organization = organizationRepository.findAll().stream().findFirst().orElse(null);
+            }
+
+            if (organization == null) {
+                organization = new Organization();
+                organization.setName("Google Pharmacy Hub");
+                organization.setSlug("google-pharmacy-" + System.currentTimeMillis());
+                organization.setActive(true);
+                organization = organizationRepository.save(organization);
+            }
+
+            // Find role: Pharmacist or Manager or Admin or first role
+            Role role = roleRepository.findByName("PHARMACIST")
+                    .or(() -> roleRepository.findByName("ADMIN"))
+                    .or(() -> roleRepository.findAll().stream().findFirst())
+                    .orElse(null);
+
+            if (role == null) {
+                role = new Role();
+                role.setName("PHARMACIST");
+                role.setSystemRole(false);
+                role.setOrganization(organization);
+                role = roleRepository.save(role);
+            }
+
+            user = new User();
+            user.setUsername(email);
+            user.setName(request.getName() != null && !request.getName().isBlank() ? request.getName() : email.split("@")[0]);
+            user.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+            user.setImageUrl(request.getPicture());
+            user.setOrganization(organization);
+            user.setRole(role);
+            user.setActive(true);
+            user = userRepository.save(user);
+
+            // Assign default branch if available
+            Branch branch = branchRepository.findAll().stream().findFirst().orElse(null);
+            if (branch != null) {
+                UserBranch userBranch = new UserBranch();
+                userBranch.setUser(user);
+                userBranch.setBranch(branch);
+                userBranchRepository.save(userBranch);
+            }
+            log.info("Auto-registered new Google user: {} with role: {}", email, role.getName());
+        } else {
+            if (!user.isActive()) {
+                user.setActive(true);
+            }
+            if (request.getPicture() != null && (user.getImageUrl() == null || user.getImageUrl().isBlank())) {
+                user.setImageUrl(request.getPicture());
+            }
+            if (request.getName() != null && (user.getName() == null || user.getName().isBlank())) {
+                user.setName(request.getName());
+            }
+            userRepository.save(user);
+            log.info("Google login for existing user: {}", email);
+        }
+
+        List<Long> branchIds = userBranchRepository.findBranchIdsByUserId(user.getId());
+
+        String accessToken = jwtService.generateAccessToken(
+                user.getId(),
+                user.getOrganization().getId(),
+                user.getRole().getId(),
+                branchIds
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getUsername(),
+                user.getOrganization().getId(),
+                user.getRole().getId(),
+                user.getRole().getName()
+        );
+    }
 }
