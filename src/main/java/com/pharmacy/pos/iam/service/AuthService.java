@@ -304,7 +304,7 @@ public class AuthService {
             // Create dedicated primary branch for this new organization
             Branch branch = new Branch();
             branch.setOrganization(organization);
-            branch.setCode("MB-01");
+            branch.setCode("BR-" + organization.getId() + "-" + String.format("%04d", System.currentTimeMillis() % 10000));
             branch.setName("Main Store Branch");
             branch.setActive(true);
             branch = branchRepository.save(branch);
