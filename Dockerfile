@@ -21,9 +21,8 @@ USER spring:spring
 # Copy built JAR from builder stage
 COPY --from=builder /app/target/app.jar app.jar
 
-# Render dynamic port binding
-ENV PORT=8081
+# Expose standard Render and Spring Boot ports
 EXPOSE 8081 10000
 
-# Render dynamic port binding with shell expansion
-ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xmx384m -Xms128m -XX:+UseG1GC -Dserver.port=${PORT:-8081} -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
+# Render dynamic port binding with 0.0.0.0 host binding
+ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xmx384m -Xms128m -XX:+UseG1GC -Dserver.port=${PORT:-10000} -Dserver.address=0.0.0.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
