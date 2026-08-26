@@ -20,7 +20,9 @@ public interface UserMapper {
     User toEntity(UserRequest request);
 
     @Mapping(target = "roleId", source = "role.id")
+    @Mapping(target = "roleName", source = "role.name")
     @Mapping(target = "organizationId", source = "organization.id")
+    @Mapping(target = "organizationName", source = "organization.name")
     UserResponse toResponse(User entity);
 
     @Mapping(target = "passwordHash", ignore = true)

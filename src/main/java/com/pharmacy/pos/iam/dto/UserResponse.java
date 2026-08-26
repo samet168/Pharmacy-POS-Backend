@@ -13,6 +13,8 @@ public class UserResponse {
     private Long id;
     private Long organizationId;
     private Long roleId;
+    private String roleName;
+    private String organizationName;
     private String name;
     private String username;
     private String phone;
