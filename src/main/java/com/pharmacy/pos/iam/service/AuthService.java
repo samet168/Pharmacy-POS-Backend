@@ -285,6 +285,7 @@ public class AuthService {
         
         // Find existing user by username/email
         User user = userRepository.findByUsername(email).orElse(null);
+        boolean isNew = (user == null);
 
         if (user == null) {
             // Auto-provision Google User
@@ -407,6 +408,19 @@ public class AuthService {
 
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
+        String currentPlanName = "Professional Cloud Plan";
+        boolean hasActiveSub = true;
+        if (user.getOrganization() != null) {
+            java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> plans = 
+                subscriptionPlanRepository.findByOrganizationId(user.getOrganization().getId());
+            if (!plans.isEmpty()) {
+                currentPlanName = plans.get(0).getPlanName();
+                hasActiveSub = plans.stream().anyMatch(p -> 
+                    p.getStatus() == com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE || 
+                    p.getStatus() == com.pharmacy.pos.common.enums.SubscriptionPlanStatus.TRIAL);
+            }
+        }
+
         return new LoginResponse(
                 accessToken,
                 refreshToken,
@@ -414,7 +428,10 @@ public class AuthService {
                 user.getUsername(),
                 user.getOrganization().getId(),
                 user.getRole().getId(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                isNew,
+                hasActiveSub,
+                currentPlanName
         );
     }
 }
