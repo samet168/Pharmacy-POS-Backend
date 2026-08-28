@@ -56,15 +56,26 @@ public class OrderController {
     @GetMapping
     @PreAuthorize("hasAuthority('order.view') or hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAll(
-            @RequestParam Long organizationId,
+            @RequestParam(required = false) Long organizationId,
             @RequestParam(required = false) Long branchId,
+            org.springframework.security.core.Authentication authentication,
             Pageable pageable) {
         
+        Long orgId = organizationId;
+        if (orgId == null && authentication != null && authentication.getPrincipal() instanceof com.pharmacy.pos.security.CustomUserDetails userDetails) {
+            if (userDetails.getUser().getOrganization() != null) {
+                orgId = userDetails.getUser().getOrganization().getId();
+            }
+        }
+        if (orgId == null) {
+            orgId = 0L; // Safety fallback for empty isolation
+        }
+
         Page<Order> orders;
         if (branchId != null) {
-            orders = orderRepository.findByOrganizationAndBranch(organizationId, branchId, pageable);
+            orders = orderRepository.findByOrganizationAndBranch(orgId, branchId, pageable);
         } else {
-            orders = orderRepository.findByOrganizationId(organizationId, pageable);
+            orders = orderRepository.findByOrganizationId(orgId, pageable);
         }
 
         PageResponse<OrderResponse> response = new PageResponse<>(

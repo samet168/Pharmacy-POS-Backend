@@ -59,7 +59,10 @@ public class UserService {
         user.setRole(role);
         user.setOrganization(organization);
 
-        if (request.getPassword() != null) {
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            if (request.getPassword().length() < 6) {
+                throw new com.pharmacy.pos.common.exception.BusinessRuleException("Password must be at least 6 characters long");
+            }
             user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         }
 

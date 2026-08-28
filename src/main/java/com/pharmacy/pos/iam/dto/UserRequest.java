@@ -20,6 +20,7 @@ public class UserRequest {
     @NotBlank
     private String username;
 
+    @jakarta.validation.constraints.Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
     private String phone;

@@ -73,7 +73,19 @@ public class CustomerController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('customer.view')")
-    public ApiResponse<PageResponse<CustomerResponse>> getAll(Pageable pageable) {
+    public ApiResponse<PageResponse<CustomerResponse>> getAll(
+            @RequestParam(required = false) Long organizationId,
+            org.springframework.security.core.Authentication authentication,
+            Pageable pageable) {
+        Long orgId = organizationId;
+        if (orgId == null && authentication != null && authentication.getPrincipal() instanceof com.pharmacy.pos.security.CustomUserDetails userDetails) {
+            if (userDetails.getUser().getOrganization() != null) {
+                orgId = userDetails.getUser().getOrganization().getId();
+            }
+        }
+        if (orgId != null) {
+            return ApiResponse.success(PageResponse.of(customerService.getByOrganization(orgId, pageable)));
+        }
         return ApiResponse.success(PageResponse.of(customerService.getAll(pageable)));
     }
 

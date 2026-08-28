@@ -54,7 +54,19 @@ public class UserController {
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<UserResponse>> getAll(Pageable pageable) {
+    public ApiResponse<PageResponse<UserResponse>> getAll(
+            @RequestParam(required = false) Long organizationId,
+            org.springframework.security.core.Authentication authentication,
+            Pageable pageable) {
+        Long orgId = organizationId;
+        if (orgId == null && authentication != null && authentication.getPrincipal() instanceof com.pharmacy.pos.security.CustomUserDetails userDetails) {
+            if (userDetails.getUser().getOrganization() != null) {
+                orgId = userDetails.getUser().getOrganization().getId();
+            }
+        }
+        if (orgId != null) {
+            return ApiResponse.success(PageResponse.of(userService.getByOrganization(orgId, pageable)));
+        }
         return ApiResponse.success(PageResponse.of(userService.getAll(pageable)));
     }
 

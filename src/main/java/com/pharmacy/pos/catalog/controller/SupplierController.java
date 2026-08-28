@@ -19,7 +19,18 @@ public class SupplierController {
     private final SupplierService supplierService;
 
     @GetMapping
-    public ApiResponse<List<SupplierResponse>> getAll() {
+    public ApiResponse<List<SupplierResponse>> getAll(
+            @RequestParam(required = false) Long organizationId,
+            org.springframework.security.core.Authentication authentication) {
+        Long orgId = organizationId;
+        if (orgId == null && authentication != null && authentication.getPrincipal() instanceof com.pharmacy.pos.security.CustomUserDetails userDetails) {
+            if (userDetails.getUser().getOrganization() != null) {
+                orgId = userDetails.getUser().getOrganization().getId();
+            }
+        }
+        if (orgId != null) {
+            return ApiResponse.success(supplierService.getByOrganization(orgId));
+        }
         return ApiResponse.success(supplierService.getAll());
     }
 
