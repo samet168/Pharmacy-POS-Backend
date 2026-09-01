@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/setup/**", "/api/v1/organizations/**", "/api/v1/subscription-plans/**", "/api/v1/branches/**", "/api/v1/dashboard/**", "/api/v1/roles/**", "/api/v1/permissions/**", "/api/v1/users/**", "/api/v1/reports/**", "/api/v1/notifications/**", "/api/v1/audit-logs/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/setup/**", "/api/v1/organizations/**", "/api/v1/subscription-plans/**", "/api/v1/branches/**", "/api/v1/doctors/**", "/api/v1/appointments/**", "/api/v1/products/**", "/api/v1/categories/**", "/api/v1/prescriptions/**", "/api/v1/dashboard/**", "/api/v1/roles/**", "/api/v1/permissions/**", "/api/v1/users/**", "/api/v1/reports/**", "/api/v1/notifications/**", "/api/v1/audit-logs/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
