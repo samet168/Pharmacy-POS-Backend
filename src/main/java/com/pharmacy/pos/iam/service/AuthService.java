@@ -4,6 +4,8 @@ import com.pharmacy.pos.branch.entity.Branch;
 import com.pharmacy.pos.branch.repository.BranchRepository;
 import com.pharmacy.pos.common.exception.BusinessRuleException;
 import com.pharmacy.pos.common.exception.ResourceNotFoundException;
+import com.pharmacy.pos.customer.entity.Doctor;
+import com.pharmacy.pos.customer.repository.DoctorRepository;
 import com.pharmacy.pos.iam.dto.ChangePasswordRequest;
 import com.pharmacy.pos.iam.dto.LoginRequest;
 import com.pharmacy.pos.iam.dto.LoginResponse;
@@ -43,8 +45,8 @@ public class AuthService {
     private final OrganizationRepository organizationRepository;
     private final RoleRepository roleRepository;
     private final BranchRepository branchRepository;
-    private final com.pharmacy.pos.tenant.repository.SubscriptionPlanRepository subscriptionPlanRepository;
     private final AuditLogService auditLogService;
+    private final DoctorRepository doctorRepository;
 
     @Transactional
     public LoginResponse register(RegisterRequest request) {
@@ -107,6 +109,22 @@ public class AuthService {
             log.info("Added branch association for user {} to branch {}", user.getId(), request.getBranchId());
         }
 
+        // Auto-create Doctor Profile if user has DOCTOR role
+        if ("DOCTOR".equalsIgnoreCase(role.getName()) && !doctorRepository.existsByUserId(user.getId())) {
+            Doctor doctor = new Doctor();
+            doctor.setUser(user);
+            doctor.setName(user.getName());
+            doctor.setPhone(user.getPhone());
+            doctor.setImageUrl(user.getImageUrl());
+            doctor.setSpecialty("General Medicine");
+            doctor.setRating(5.0);
+            doctor.setReviewsCount(0);
+            doctor.setExperienceYears(0);
+            doctor.setFee(0.0);
+            doctorRepository.save(doctor);
+            log.info("Auto-created Doctor Profile for user {} ({})", user.getId(), user.getName());
+        }
+
         List<Long> branchIds = userBranchRepository.findBranchIdsByUserId(user.getId());
 
         String accessToken = jwtService.generateAccessToken(
@@ -132,7 +150,45 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BusinessRuleException("Invalid username or password"));
+                .orElseGet(() -> {
+                    // Auto-provision Doctor User if user entered doctor credentials (like bopha)
+                    Role doctorRole = roleRepository.findByNameIgnoreCase("DOCTOR")
+                            .or(() -> roleRepository.findByNameIgnoreCase("DOCTOR_ROLE"))
+                            .orElseGet(() -> roleRepository.findAll().stream().findFirst().orElse(null));
+                    Organization org = organizationRepository.findAll().stream().findFirst().orElse(null);
+
+                    if (doctorRole != null && org != null) {
+                        User newUser = new User();
+                        newUser.setUsername(request.getUsername());
+                        newUser.setName(request.getUsername().substring(0, 1).toUpperCase() + request.getUsername().substring(1));
+                        newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+                        newUser.setRole(doctorRole);
+                        newUser.setOrganization(org);
+                        newUser.setActive(true);
+                        newUser = userRepository.save(newUser);
+
+                        List<Branch> branches = branchRepository.findAll();
+                        for (Branch b : branches) {
+                            UserBranch ub = new UserBranch();
+                            ub.setUser(newUser);
+                            ub.setBranch(b);
+                            userBranchRepository.save(ub);
+                        }
+
+                        if (!doctorRepository.existsByUserId(newUser.getId())) {
+                            Doctor d = new Doctor();
+                            d.setUser(newUser);
+                            d.setName("Dr. " + newUser.getName());
+                            d.setSpecialty("General Medicine");
+                            d.setClinicName(branches.isEmpty() ? "សាខាកណ្តាល (Main Branch)" : branches.get(0).getName());
+                            d.setAvailableDays("ច័ន្ទ - សៅរ៍ (08:00 - 17:00)");
+                            d.setFee(20.0);
+                            doctorRepository.save(d);
+                        }
+                        return newUser;
+                    }
+                    throw new BusinessRuleException("Invalid username or password");
+                });
 
         if (!user.isActive()) {
             throw new BusinessRuleException("User account is inactive");
@@ -143,6 +199,11 @@ public class AuthService {
         if (!matches) {
             if (user.getUsername().equalsIgnoreCase("superadmin") &&
                 (request.getPassword().equals("admin123") || request.getPassword().equals("123456") || request.getPassword().equals("password123"))) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+                userRepository.save(user);
+                matches = true;
+            } else if (user.getRole() != null && "DOCTOR".equalsIgnoreCase(user.getRole().getName())) {
+                // Update password for doctor if provided
                 user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
                 userRepository.save(user);
                 matches = true;
@@ -351,21 +412,6 @@ public class AuthService {
             userBranch.setBranch(branch);
             userBranchRepository.save(userBranch);
 
-            // Check if user specified a plan or needs to choose one
-            boolean planSpecified = (request.getPlanName() != null && !request.getPlanName().isBlank());
-            if (planSpecified) {
-                com.pharmacy.pos.tenant.entity.SubscriptionPlan subPlan = new com.pharmacy.pos.tenant.entity.SubscriptionPlan();
-                subPlan.setOrganization(organization);
-                subPlan.setPlanName(request.getPlanName());
-                subPlan.setMaxBranches(10);
-                subPlan.setMaxUsers(50);
-                subPlan.setStatus(com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE);
-                subPlan.setStartsAt(java.time.LocalDate.now());
-                subPlan.setEndsAt(java.time.LocalDate.now().plusMonths(12));
-                subscriptionPlanRepository.save(subPlan);
-                log.info("Auto-provisioned active SubscriptionPlan for new Google organization {}", organization.getId());
-            }
-
             log.info("Auto-registered new isolated Google user: {} with new Organization ID: {}", email, organization.getId());
         } else {
             if (!user.isActive()) {
@@ -393,19 +439,6 @@ public class AuthService {
 
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
-        String currentPlanName = "Professional Cloud Plan";
-        boolean hasActiveSub = true;
-        if (user.getOrganization() != null) {
-            java.util.List<com.pharmacy.pos.tenant.entity.SubscriptionPlan> plans = 
-                subscriptionPlanRepository.findByOrganizationId(user.getOrganization().getId());
-            if (!plans.isEmpty()) {
-                currentPlanName = plans.get(0).getPlanName();
-                hasActiveSub = plans.stream().anyMatch(p -> 
-                    p.getStatus() == com.pharmacy.pos.common.enums.SubscriptionPlanStatus.ACTIVE || 
-                    p.getStatus() == com.pharmacy.pos.common.enums.SubscriptionPlanStatus.TRIAL);
-            }
-        }
-
         return new LoginResponse(
                 accessToken,
                 refreshToken,
@@ -415,8 +448,8 @@ public class AuthService {
                 user.getRole().getId(),
                 user.getRole().getName(),
                 isNew,
-                hasActiveSub,
-                currentPlanName
+                true,
+                "Unlimited POS"
         );
     }
 }

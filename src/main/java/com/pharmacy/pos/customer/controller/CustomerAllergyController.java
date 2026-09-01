@@ -33,6 +33,11 @@ public class CustomerAllergyController {
         return ApiResponse.success(customerAllergyService.getById(id));
     }
 
+    @GetMapping
+    public ApiResponse<List<CustomerAllergyResponse>> getAll() {
+        return ApiResponse.success(customerAllergyService.getAll());
+    }
+
     @GetMapping("/customer/{customerId}")
     public ApiResponse<List<CustomerAllergyResponse>> getByCustomer(@PathVariable Long customerId) {
         return ApiResponse.success(customerAllergyService.getByCustomer(customerId));

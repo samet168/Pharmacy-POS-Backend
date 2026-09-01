@@ -27,12 +27,30 @@ public interface ProductMapper {
     @Mapping(target = "organizationId",      source = "organization.id")
     @Mapping(target = "genericNameId",       source = "genericNameId")   // uses map(ActiveIngredient) helper
     @Mapping(target = "categoryId",          source = "category.id")
+    @Mapping(target = "categoryName",        source = "category.name")
     @Mapping(target = "defaultSupplierId",   source = "defaultSupplier.id")
+    @Mapping(target = "price",               ignore = true)
+    @Mapping(target = "unitName",            ignore = true)
     // Entity has field "active"           → isActive() getter  → DTO field "active"
     // Entity has field "controlledSubstance" → isControlledSubstance() → DTO "controlledSubstance"
     @Mapping(target = "active",              source = "active")
     @Mapping(target = "controlledSubstance", source = "controlledSubstance")
     ProductResponse toResponse(Product entity);
+
+    @org.mapstruct.AfterMapping
+    default void setUnitDetails(Product entity, @MappingTarget ProductResponse response) {
+        if (entity.getCategory() != null) {
+            response.setCategoryName(entity.getCategory().getName());
+        }
+        if (entity.getProductUnits() != null && !entity.getProductUnits().isEmpty()) {
+            com.pharmacy.pos.catalog.entity.ProductUnit base = entity.getProductUnits().stream()
+                    .filter(com.pharmacy.pos.catalog.entity.ProductUnit::isBaseUnit)
+                    .findFirst()
+                    .orElse(entity.getProductUnits().iterator().next());
+            response.setPrice(base.getSellingPrice());
+            response.setUnitName(base.getUnitName());
+        }
+    }
 
     // ── Update Entity ────────────────────────────────────────────────────────
     @Mapping(target = "id",              ignore = true)

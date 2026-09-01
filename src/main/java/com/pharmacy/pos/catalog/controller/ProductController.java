@@ -52,19 +52,16 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('product.view')")
     public ApiResponse<ProductResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(productService.getById(id));
     }
 
     @GetMapping("/organization/{organizationId}")
-    @PreAuthorize("hasAuthority('product.view')")
     public ApiResponse<PageResponse<ProductResponse>> getByOrganization(@PathVariable Long organizationId, Pageable pageable) {
         return ApiResponse.success(PageResponse.of(productService.getByOrganization(organizationId, pageable)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('product.view')")
     public ApiResponse<PageResponse<ProductResponse>> getAll(
             @RequestParam(required = false) Long organizationId,
             org.springframework.security.core.Authentication authentication,
@@ -82,23 +79,24 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('product.view')")
     @Operation(summary = "Search products", description = "Search products by name, SKU, or barcode")
     public ApiResponse<PageResponse<ProductResponse>> search(
-            @Parameter(description = "Organization ID") @RequestParam Long organizationId,
+            @Parameter(description = "Organization ID") @RequestParam(required = false) Long organizationId,
             @Parameter(description = "Search query") @RequestParam String query,
             @Parameter(description = "Branch ID (optional)") @RequestParam(required = false) Long branchId,
             Pageable pageable) {
+        if (organizationId == null) {
+            return ApiResponse.success(PageResponse.of(productService.searchAll(query, pageable)));
+        }
         return ApiResponse.success(PageResponse.of(productService.search(organizationId, query, branchId, pageable)));
     }
 
     @GetMapping("/barcode/{barcode}")
-    @PreAuthorize("hasAuthority('product.view')")
     @Operation(summary = "Get product by barcode", description = "Get product by barcode/SKU")
     public ApiResponse<ProductResponse> getByBarcode(
-            @Parameter(description = "Organization ID") @RequestParam Long organizationId,
+            @Parameter(description = "Organization ID") @RequestParam(required = false) Long organizationId,
             @Parameter(description = "Barcode/SKU") @PathVariable String barcode) {
-        return ApiResponse.success(productService.getByBarcode(organizationId, barcode));
+        return ApiResponse.success(productService.getByBarcode(organizationId != null ? organizationId : 1L, barcode));
     }
 
     @DeleteMapping("/{id}")

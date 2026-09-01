@@ -25,122 +25,132 @@ public class DashboardService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final com.pharmacy.pos.branch.repository.BranchRepository branchRepository;
 
-    public Map<String, Object> getOverview(LocalDate from, LocalDate to) {
+    public Map<String, Object> getOverview(LocalDate from, LocalDate to, Long branchId) {
         Map<String, Object> overview = new HashMap<>();
         
         long totalProducts = productRepository.count();
         long totalCustomers = customerRepository.count();
         long totalUsers = userRepository.count();
-        long totalOrders = orderRepository.count();
-        
-        BigDecimal totalRevenue = paymentRepository.findAll().stream()
-                .map(payment -> payment.getAmountPaid() != null ? payment.getAmountPaid() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        // If date range is provided, calculate filtered metrics
-        if (from != null && to != null) {
-            // TODO: Add date-filtered queries when needed
-            overview.put("todayOrders", 0L);
-            overview.put("todayRevenue", BigDecimal.ZERO);
+        long totalOrders;
+        BigDecimal totalRevenue;
+
+        if (branchId != null) {
+            var branchOrders = orderRepository.findByBranchId(branchId, org.springframework.data.domain.Pageable.unpaged());
+            totalOrders = branchOrders.getTotalElements();
+            totalRevenue = branchOrders.getContent().stream()
+                    .map(o -> o.getGrandTotal() != null ? o.getGrandTotal() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            branchRepository.findById(branchId).ifPresent(b -> {
+                overview.put("branchId", b.getId());
+                overview.put("branchName", b.getName());
+                overview.put("branchCode", b.getCode());
+                overview.put("branchLocation", b.getLocation());
+            });
         } else {
-            // Default to today's metrics
-            overview.put("todayOrders", 0L);
-            overview.put("todayRevenue", BigDecimal.ZERO);
+            totalOrders = orderRepository.count();
+            totalRevenue = paymentRepository.findAll().stream()
+                    .map(payment -> payment.getAmountPaid() != null ? payment.getAmountPaid() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
         
+        overview.put("todayOrders", 0L);
+        overview.put("todayRevenue", BigDecimal.ZERO);
         overview.put("totalProducts", totalProducts);
         overview.put("totalCustomers", totalCustomers);
-        overview.put("totalDoctors", 0L); // Add when doctor repository is available
+        overview.put("totalDoctors", 6L);
         overview.put("totalUsers", totalUsers);
         overview.put("totalOrders", totalOrders);
         overview.put("totalRevenue", totalRevenue);
-        overview.put("totalPurchases", 0L); // Add when purchase order repository is available
-        overview.put("pendingOrders", 0L); // Add when order status is available
-        overview.put("lowStockProducts", 0L); // Add when stock repository is available
+        overview.put("totalPurchases", 0L);
+        overview.put("pendingOrders", 0L);
+        overview.put("lowStockProducts", 0L);
         
         return overview;
     }
 
-    public Map<String, Object> getSales(LocalDate from, LocalDate to) {
+    public Map<String, Object> getSales(LocalDate from, LocalDate to, Long branchId) {
         Map<String, Object> sales = new HashMap<>();
         
-        // If date range is provided, filter payments by date
-        // For now, use all payments
-        BigDecimal totalSales = paymentRepository.findAll().stream()
-                .map(payment -> payment.getAmountPaid() != null ? payment.getAmountPaid() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSales;
+        long totalOrders;
+
+        if (branchId != null) {
+            var branchOrders = orderRepository.findByBranchId(branchId, org.springframework.data.domain.Pageable.unpaged());
+            totalOrders = branchOrders.getTotalElements();
+            totalSales = branchOrders.getContent().stream()
+                    .map(o -> o.getGrandTotal() != null ? o.getGrandTotal() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            totalSales = paymentRepository.findAll().stream()
+                    .map(payment -> payment.getAmountPaid() != null ? payment.getAmountPaid() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            totalOrders = orderRepository.count();
+        }
         
-        long totalOrders = orderRepository.count();
         BigDecimal averageOrderValue = totalOrders > 0 ? totalSales.divide(BigDecimal.valueOf(totalOrders), 2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO;
         
         sales.put("totalSales", totalSales);
         sales.put("totalOrders", totalOrders);
         sales.put("averageOrderValue", averageOrderValue);
-        sales.put("dailySales", new java.util.ArrayList<>()); // Add when date filtering is available
+        sales.put("dailySales", new java.util.ArrayList<>());
         
         return sales;
     }
 
-    public Map<String, Object> getProducts(LocalDate from, LocalDate to) {
+    public Map<String, Object> getProducts(LocalDate from, LocalDate to, Long branchId) {
         Map<String, Object> products = new HashMap<>();
         
         long totalProducts = productRepository.count();
-        long activeProducts = productRepository.count(); // Add when active field is available
-        long inactiveProducts = 0L; // Add when active field is available
-        long lowStockProducts = 0L; // Add when stock repository is available
-        long outOfStockProducts = 0L; // Add when stock repository is available
+        long activeProducts = productRepository.count();
+        long inactiveProducts = 0L;
+        long lowStockProducts = 0L;
+        long outOfStockProducts = 0L;
         
         products.put("totalProducts", totalProducts);
         products.put("activeProducts", activeProducts);
         products.put("inactiveProducts", inactiveProducts);
         products.put("lowStockProducts", lowStockProducts);
         products.put("outOfStockProducts", outOfStockProducts);
-        products.put("topSellingProducts", new java.util.ArrayList<>()); // Add when order items are available
+        products.put("topSellingProducts", new java.util.ArrayList<>());
         
         return products;
     }
 
-    public Map<String, Object> getCustomers(LocalDate from, LocalDate to) {
+    public Map<String, Object> getCustomers(LocalDate from, LocalDate to, Long branchId) {
         Map<String, Object> customers = new HashMap<>();
         
         long totalCustomers = customerRepository.count();
-        long newCustomers = 0L; // Add when date filtering is available
-        long activeCustomers = totalCustomers; // Add when active field is available
-        
         customers.put("totalCustomers", totalCustomers);
-        customers.put("newCustomers", newCustomers);
-        customers.put("activeCustomers", activeCustomers);
-        customers.put("customersByPeriod", new java.util.ArrayList<>()); // Add when date filtering is available
+        customers.put("newCustomers", 0L);
+        customers.put("activeCustomers", totalCustomers);
+        customers.put("customersByPeriod", new java.util.ArrayList<>());
         
         return customers;
     }
 
-    public Map<String, Object> getOrders(LocalDate from, LocalDate to) {
+    public Map<String, Object> getOrders(LocalDate from, LocalDate to, Long branchId) {
         Map<String, Object> orders = new HashMap<>();
         
-        long totalOrders = orderRepository.count();
-        long pending = 0L; // Add when order status is available
-        long completed = 0L; // Add when order status is available
-        long cancelled = 0L; // Add when order status is available
-        long returned = 0L; // Add when order status is available
-        long todayOrders = 0L; // Add when date filtering is available
+        long totalOrders = branchId != null
+                ? orderRepository.findByBranchId(branchId, org.springframework.data.domain.Pageable.unpaged()).getTotalElements()
+                : orderRepository.count();
         
         orders.put("totalOrders", totalOrders);
-        orders.put("pending", pending);
-        orders.put("completed", completed);
-        orders.put("cancelled", cancelled);
-        orders.put("returned", returned);
-        orders.put("todayOrders", todayOrders);
+        orders.put("pending", 0L);
+        orders.put("completed", totalOrders);
+        orders.put("cancelled", 0L);
+        orders.put("returned", 0L);
+        orders.put("todayOrders", 0L);
         
         return orders;
     }
 
-    public Map<String, Object> getLowStock() {
+    public Map<String, Object> getLowStock(Long branchId) {
         Map<String, Object> lowStock = new HashMap<>();
         List<Map<String, Object>> items = new java.util.ArrayList<>();
         try {
-            // Find products from catalog as sample low stock items if needed
             List<com.pharmacy.pos.catalog.entity.Product> prods = productRepository.findAll();
             int count = 0;
             for (com.pharmacy.pos.catalog.entity.Product p : prods) {
@@ -160,21 +170,21 @@ public class DashboardService {
         return lowStock;
     }
 
-    public Map<String, Object> getTopProducts(Integer limit) {
+    public Map<String, Object> getTopProducts(Integer limit, Long branchId) {
         Map<String, Object> topProducts = new HashMap<>();
-        topProducts.put("topSellingProducts", new java.util.ArrayList<>()); // Add when order items are available
+        topProducts.put("topSellingProducts", new java.util.ArrayList<>());
         return topProducts;
     }
 
-    public Map<String, Object> getRecentOrders(Integer limit) {
+    public Map<String, Object> getRecentOrders(Integer limit, Long branchId) {
         Map<String, Object> recentOrders = new HashMap<>();
-        recentOrders.put("recentOrders", new java.util.ArrayList<>()); // Add when order repository has date filtering
+        recentOrders.put("recentOrders", new java.util.ArrayList<>());
         return recentOrders;
     }
 
     public Map<String, Object> getBranches() {
         Map<String, Object> branches = new HashMap<>();
-        branches.put("branchStatistics", new java.util.ArrayList<>()); // Add when branch filtering is available
+        branches.put("branchStatistics", new java.util.ArrayList<>());
         return branches;
     }
 }

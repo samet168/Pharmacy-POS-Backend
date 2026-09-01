@@ -165,8 +165,13 @@ public class ProductService {
     }
 
     public Page<ProductResponse> search(Long organizationId, String query, Long branchId, Pageable pageable) {
-        return productRepository.findByOrganizationIdAndBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
-                organizationId, query, query, pageable)
+        return productRepository.findByOrganizationId(organizationId, pageable)
+                .map(productMapper::toResponse);
+    }
+
+    public Page<ProductResponse> searchAll(String query, Pageable pageable) {
+        return productRepository.findByBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
+                query, query, pageable)
                 .map(productMapper::toResponse);
     }
 

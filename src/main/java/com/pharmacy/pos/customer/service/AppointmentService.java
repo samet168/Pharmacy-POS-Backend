@@ -34,16 +34,19 @@ public class AppointmentService {
         appointment.setAppointmentNumber(aptNum);
         appointment.setDoctor(doctor);
         appointment.setDoctorName(doctor.getName());
-        appointment.setDoctorSpecialty(doctor.getClinicName() != null ? doctor.getClinicName() : "General Medicine");
+        appointment.setDoctorSpecialty(doctor.getSpecialty() != null ? doctor.getSpecialty() : "General Medicine");
         appointment.setPatientName(request.getPatientName());
         appointment.setPatientPhone(request.getPatientPhone());
         appointment.setPatientEmail(request.getPatientEmail());
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentTime(request.getAppointmentTime());
         appointment.setType(request.getType() != null ? request.getType() : "IN_PERSON");
-        appointment.setStatus("CONFIRMED");
+        appointment.setStatus("PENDING");
         appointment.setSymptoms(request.getSymptoms());
-        appointment.setClinicName(request.getClinicName() != null ? request.getClinicName() : doctor.getClinicName());
+        String branch = doctor.getClinicName() != null && !doctor.getClinicName().isBlank()
+                ? doctor.getClinicName()
+                : (request.getBranchName() != null ? request.getBranchName() : "សាខាកណ្តាល (Main Branch)");
+        appointment.setClinicName(branch);
         appointment.setFee(request.getFee());
         appointment.setQrCode(aptNum + "-QR-" + System.currentTimeMillis() % 10000);
 
@@ -81,6 +84,15 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
+    @Transactional
+    public AppointmentResponse updateStatus(Long id, String status) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment", id));
+        appointment.setStatus(status);
+        appointment = appointmentRepository.save(appointment);
+        return toResponse(appointment);
+    }
+
     private AppointmentResponse toResponse(Appointment entity) {
         AppointmentResponse dto = new AppointmentResponse();
         dto.setId(entity.getId());
@@ -100,6 +112,7 @@ public class AppointmentService {
         dto.setStatus(entity.getStatus());
         dto.setSymptoms(entity.getSymptoms());
         dto.setClinicName(entity.getClinicName());
+        dto.setBranchName(entity.getClinicName());
         dto.setFee(entity.getFee());
         dto.setQrCode(entity.getQrCode());
         dto.setCreatedAt(entity.getCreatedAt());

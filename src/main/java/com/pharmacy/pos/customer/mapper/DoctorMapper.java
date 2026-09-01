@@ -11,14 +11,23 @@ import org.mapstruct.MappingTarget;
 public interface DoctorMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "prescriptions", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Doctor toEntity(DoctorRequest request);
 
     DoctorResponse toResponse(Doctor entity);
 
+    @org.mapstruct.AfterMapping
+    default void populateBranchName(Doctor entity, @MappingTarget DoctorResponse response) {
+        if (response != null && entity != null) {
+            response.setBranchName(entity.getClinicName());
+        }
+    }
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "prescriptions", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

@@ -51,4 +51,9 @@ public class AppointmentController {
         appointmentService.cancelAppointment(id);
         return ApiResponse.success("Appointment cancelled successfully", null);
     }
+
+    @PutMapping("/{id}/status")
+    public ApiResponse<AppointmentResponse> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return ApiResponse.success("Status updated successfully", appointmentService.updateStatus(id, status));
+    }
 }

@@ -26,7 +26,7 @@ public class AdminMethodSecurityExpressionRoot implements MethodSecurityExpressi
 
     @Override
     public boolean hasAuthority(String authority) {
-        return delegate.hasAuthority("ADMIN") || delegate.hasAuthority(authority);
+        return delegate.hasAuthority("ADMIN") || delegate.hasAuthority("ROLE_ADMIN") || delegate.hasAuthority("SUPERADMIN") || delegate.hasAuthority("ROLE_SUPERADMIN") || delegate.hasAuthority(authority);
     }
 
     @Override
@@ -36,7 +36,7 @@ public class AdminMethodSecurityExpressionRoot implements MethodSecurityExpressi
 
     @Override
     public boolean hasAnyAuthority(String... authorities) {
-        return delegate.hasAuthority("ADMIN") || delegate.hasAnyAuthority(authorities);
+        return delegate.hasAuthority("ADMIN") || delegate.hasAuthority("ROLE_ADMIN") || delegate.hasAuthority("SUPERADMIN") || delegate.hasAuthority("ROLE_SUPERADMIN") || delegate.hasAnyAuthority(authorities);
     }
 
     @Override

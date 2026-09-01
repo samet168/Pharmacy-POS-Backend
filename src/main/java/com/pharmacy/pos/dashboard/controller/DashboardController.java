@@ -24,60 +24,68 @@ public class DashboardController {
     @Operation(summary = "Get dashboard overview", description = "Get overall dashboard statistics")
     public ApiResponse<Map<String, Object>> getOverview(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ApiResponse.success(dashboardService.getOverview(from, to));
+            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getOverview(from, to, branchId));
     }
 
     @GetMapping("/sales")
     @Operation(summary = "Get sales data", description = "Get sales statistics and data")
     public ApiResponse<Map<String, Object>> getSales(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ApiResponse.success(dashboardService.getSales(from, to));
+            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getSales(from, to, branchId));
     }
 
     @GetMapping("/products")
     @Operation(summary = "Get products data", description = "Get product statistics")
     public ApiResponse<Map<String, Object>> getProducts(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ApiResponse.success(dashboardService.getProducts(from, to));
+            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getProducts(from, to, branchId));
     }
 
     @GetMapping("/customers")
     @Operation(summary = "Get customers data", description = "Get customer statistics")
     public ApiResponse<Map<String, Object>> getCustomers(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ApiResponse.success(dashboardService.getCustomers(from, to));
+            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getCustomers(from, to, branchId));
     }
 
     @GetMapping("/orders")
     @Operation(summary = "Get orders data", description = "Get order statistics")
     public ApiResponse<Map<String, Object>> getOrders(
             @Parameter(description = "From date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ApiResponse.success(dashboardService.getOrders(from, to));
+            @Parameter(description = "To date") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getOrders(from, to, branchId));
     }
 
     @GetMapping("/low-stock")
     @Operation(summary = "Get low stock products", description = "Get products with low stock")
-    public ApiResponse<Map<String, Object>> getLowStock() {
-        return ApiResponse.success(dashboardService.getLowStock());
+    public ApiResponse<Map<String, Object>> getLowStock(
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getLowStock(branchId));
     }
 
     @GetMapping("/top-products")
     @Operation(summary = "Get top selling products", description = "Get top selling products")
     public ApiResponse<Map<String, Object>> getTopProducts(
-            @Parameter(description = "Limit") @RequestParam(required = false) Integer limit) {
-        return ApiResponse.success(dashboardService.getTopProducts(limit));
+            @Parameter(description = "Limit") @RequestParam(required = false) Integer limit,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getTopProducts(limit, branchId));
     }
 
     @GetMapping("/recent-orders")
     @Operation(summary = "Get recent orders", description = "Get recent orders")
     public ApiResponse<Map<String, Object>> getRecentOrders(
-            @Parameter(description = "Limit") @RequestParam(required = false) Integer limit) {
-        return ApiResponse.success(dashboardService.getRecentOrders(limit));
+            @Parameter(description = "Limit") @RequestParam(required = false) Integer limit,
+            @Parameter(description = "Branch ID") @RequestParam(required = false) Long branchId) {
+        return ApiResponse.success(dashboardService.getRecentOrders(limit, branchId));
     }
 
     @GetMapping("/branches")

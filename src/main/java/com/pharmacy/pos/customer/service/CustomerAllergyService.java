@@ -68,6 +68,12 @@ public class CustomerAllergyService {
         return customerAllergyMapper.toResponse(allergy);
     }
 
+    public List<CustomerAllergyResponse> getAll() {
+        return customerAllergyRepository.findAll().stream()
+                .map(customerAllergyMapper::toResponse)
+                .toList();
+    }
+
     public List<CustomerAllergyResponse> getByCustomer(Long customerId) {
         return customerAllergyRepository.findByCustomerId(customerId).stream()
                 .map(customerAllergyMapper::toResponse)

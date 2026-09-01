@@ -37,6 +37,10 @@ public class ProductResponse {
     private String imageUrl;
     private Integer minStockAlert;
 
+    private String categoryName;
+    private java.math.BigDecimal price;
+    private String unitName;
+
     @JsonProperty("isActive")
     private Boolean active;                // entity field: active (column: is_active)
 

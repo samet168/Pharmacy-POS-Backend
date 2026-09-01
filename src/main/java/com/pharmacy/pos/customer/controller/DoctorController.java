@@ -27,7 +27,6 @@ public class DoctorController {
     private final DoctorService doctorService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('doctor.create')")
     @Operation(summary = "Create doctor", description = "Create a new doctor with optional image upload")
     public ApiResponse<DoctorResponse> create(
             @Parameter(description = "Doctor data as JSON", required = true, content = @Content(schema = @Schema(implementation = DoctorRequest.class))) @RequestPart(value = "doctor", required = true) @Valid DoctorRequest request,
@@ -39,7 +38,6 @@ public class DoctorController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('doctor.update')")
     @Operation(summary = "Update doctor", description = "Update doctor with optional image upload")
     public ApiResponse<DoctorResponse> update(
             @PathVariable Long id,
@@ -52,25 +50,21 @@ public class DoctorController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('doctor.view')")
     public ApiResponse<DoctorResponse> getById(@PathVariable Long id) {
         return ApiResponse.success(doctorService.getById(id));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('doctor.view')")
     public ApiResponse<PageResponse<DoctorResponse>> searchByName(@RequestParam String name, Pageable pageable) {
         return ApiResponse.success(PageResponse.of(doctorService.searchByName(name, pageable)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('doctor.view')")
     public ApiResponse<PageResponse<DoctorResponse>> getAll(Pageable pageable) {
         return ApiResponse.success(PageResponse.of(doctorService.getAll(pageable)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('doctor.delete')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         doctorService.delete(id);
         return ApiResponse.success("Doctor deleted successfully", null);

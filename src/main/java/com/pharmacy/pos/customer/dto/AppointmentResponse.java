@@ -23,6 +23,7 @@ public class AppointmentResponse {
     private String status;
     private String symptoms;
     private String clinicName;
+    private String branchName;
     private BigDecimal fee;
     private String qrCode;
     private LocalDateTime createdAt;

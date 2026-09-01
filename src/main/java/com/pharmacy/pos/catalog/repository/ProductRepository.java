@@ -48,11 +48,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * Full-text search by brandName OR sku within an organization.
      * Used by ProductService.search().
      */
-    @Query("SELECT p FROM Product p WHERE p.organization.id = :orgId AND " +
+    @Query("SELECT p FROM Product p WHERE " +
            "(LOWER(p.brandName) LIKE LOWER(CONCAT('%', :brand, '%')) OR " +
            " LOWER(p.sku)       LIKE LOWER(CONCAT('%', :sku,   '%')))")
-    Page<Product> findByOrganizationIdAndBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
-            @Param("orgId")  Long organizationId,
+    Page<Product> findByBrandNameContainingIgnoreCaseOrSkuContainingIgnoreCase(
             @Param("brand")  String brandName,
             @Param("sku")    String sku,
             Pageable pageable);

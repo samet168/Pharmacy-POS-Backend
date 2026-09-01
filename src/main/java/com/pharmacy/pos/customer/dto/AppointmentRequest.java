@@ -30,5 +30,6 @@ public class AppointmentRequest {
 
     private String symptoms;
     private String clinicName;
+    private String branchName;
     private BigDecimal fee;
 }

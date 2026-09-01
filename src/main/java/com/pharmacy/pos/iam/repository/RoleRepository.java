@@ -13,7 +13,10 @@ import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
-    Optional<Role> findByName(String name);
+    @Query(value = "SELECT * FROM roles WHERE name = :name LIMIT 1", nativeQuery = true)
+    Optional<Role> findByName(@Param("name") String name);
+    @Query(value = "SELECT * FROM roles WHERE LOWER(name) = LOWER(:name) LIMIT 1", nativeQuery = true)
+    Optional<Role> findByNameIgnoreCase(@Param("name") String name);
     Optional<Role> findByNameAndSystemRole(String name, boolean systemRole);
     
     @Query("SELECT r FROM Role r WHERE r.organization.id = :organizationId OR r.organization IS NULL OR r.systemRole = true")
